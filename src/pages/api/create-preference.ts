@@ -9,6 +9,7 @@ const WORKING_DAYS = [1, 2, 3, 4, 5, 6];
 function validateDeliveryDate(dateStr: string): string | null {
   if (!dateStr) return 'Falta la fecha de entrega.';
   const selected = new Date(dateStr + 'T12:00:00');
+  if (isNaN(selected.getTime())) return 'Fecha inválida.';
   const day = selected.getDay();
   if (day === 0) return 'No entregamos los domingos.';
   const minDate = new Date();
@@ -82,6 +83,14 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
+  const phoneDigits = (body.customer.phone || '').replace(/\D/g, '');
+  if (phoneDigits.length < 10 || phoneDigits.length > 13) {
+    return new Response(JSON.stringify({ error: 'Teléfono inválido. Ingresá un número argentino válido.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const dateError = validateDeliveryDate(body.deliveryDate || '');
   if (dateError) {
     return new Response(JSON.stringify({ error: dateError }), {
@@ -123,6 +132,8 @@ export const POST: APIRoute = async ({ request }) => {
       external_reference: `order_${Date.now()}_${body.deliveryDate}_${body.deliveryTime}`,
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -130,7 +141,9 @@ export const POST: APIRoute = async ({ request }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     const data = await response.json();
 

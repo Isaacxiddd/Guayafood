@@ -31,9 +31,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { 'Authorization': `Bearer ${token}` },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       return new Response(JSON.stringify({ verified: false, status: 'not_found' }), {
