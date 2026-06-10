@@ -1,0 +1,57 @@
+---
+import { MERCADOPAGO } from '../lib/config';
+
+interface Props {
+  title: string;
+  unitPrice: number;
+  description?: string;
+}
+
+const { title, unitPrice, description } = Astro.props;
+---
+
+<button
+  class="mp-pay-btn inline-flex items-center justify-center gap-2 bg-[#00BFFF] hover:bg-[#009ACD] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg w-full"
+  data-title={title}
+  data-price={unitPrice}
+  data-desc={description || ''}
+>
+  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg>
+  {MERCADOPAGO.buttonText}
+</button>
+
+<script>
+  const MP_API_URL = import.meta.env.PUBLIC_MP_API_URL || '/api/create-preference';
+
+  document.querySelectorAll('.mp-pay-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const title = btn.getAttribute('data-title') || '';
+      const unitPrice = Number(btn.getAttribute('data-price'));
+      const description = btn.getAttribute('data-desc') || '';
+
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Redirigiendo...';
+
+      try {
+        const res = await fetch(MP_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, unitPrice, quantity: 1, description }),
+        });
+
+        if (!res.ok) throw new Error('Error al crear el pago');
+
+        const data = await res.json();
+        window.location.href = data.init_point;
+      } catch (err) {
+        console.error(err);
+        btn.innerHTML = 'Error, intentá de nuevo';
+        btn.disabled = false;
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 3000);
+      }
+    });
+  });
+</script>

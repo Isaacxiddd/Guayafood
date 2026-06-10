@@ -1,5 +1,6 @@
 ---
 import { WHATSAPP, COMBOS_SECTION } from '../lib/config';
+import PaymentButton from './PaymentButton.astro';
 const waUrl = WHATSAPP.message(WHATSAPP.messages.combos);
 const { badge, title, description, items } = COMBOS_SECTION;
 ---
@@ -41,18 +42,21 @@ const { badge, title, description, items } = COMBOS_SECTION;
               </li>
             </ul>
             <p class="font-heading text-3xl font-bold text-vinotinto mb-6">{c.price}</p>
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class={`inline-block w-full py-3 rounded-full font-semibold text-sm transition-all ${
-                c.popular
-                  ? "bg-vinotinto hover:bg-vinotinto-light text-white shadow-lg shadow-vinotinto/25"
-                  : "bg-crema hover:bg-crema-dark text-texto"
-              }`}
-            >
-              Pedir {c.name}
-            </a>
+            <div class="flex flex-col gap-2">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class={`inline-block w-full py-3 rounded-full font-semibold text-sm text-center transition-all ${
+                  c.popular
+                    ? "bg-vinotinto hover:bg-vinotinto-light text-white shadow-lg shadow-vinotinto/25"
+                    : "bg-crema hover:bg-crema-dark text-texto"
+                }`}
+              >
+                Pedir {c.name} por WhatsApp
+              </a>
+              <PaymentButton title={c.name} unitPrice={c.unitPrice} description={`${c.pieces} - ${c.salsas}`} />
+            </div>
           </div>
         </div>
       ))}
