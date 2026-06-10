@@ -1,0 +1,31 @@
+---
+import { SITE, GALERIA } from '../lib/config';
+const { badge, title, description, items, cta } = GALERIA;
+---
+
+<section id="galeria" class="py-20 md:py-28 px-4 bg-crema">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <span class="text-vinotinto font-semibold text-sm tracking-widest uppercase">{badge}</span>
+      <h2 class="font-heading text-3xl md:text-4xl font-bold mt-3 text-texto">
+        {title}
+      </h2>
+      <p class="text-texto-light mt-4 max-w-xl mx-auto">
+        {description}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {items.map((f) => (
+        <div class={`aspect-square rounded-xl bg-gradient-to-br ${f.color} flex flex-col items-center justify-center gap-3 border border-crema-dark hover:shadow-lg transition-all group cursor-pointer`}>
+          <span class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">{f.emoji}</span>
+          <span class="text-sm font-medium text-texto-light">{f.label}</span>
+        </div>
+      ))}
+    </div>
+
+    <p class="text-center text-texto-light text-sm mt-6">
+      📸 Seguinos en <a href={SITE.instagramUrl} target="_blank" class="text-vinotinto font-semibold hover:underline">Instagram</a> para ver nuestras creaciones del día
+    </p>
+  </div>
+</section>

@@ -1,0 +1,61 @@
+---
+import { WHATSAPP, COMBOS_SECTION } from '../lib/config';
+const waUrl = WHATSAPP.message(WHATSAPP.messages.combos);
+const { badge, title, description, items } = COMBOS_SECTION;
+---
+
+<section id="combos" class="py-20 md:py-28 px-4 bg-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <span class="text-vinotinto font-semibold text-sm tracking-widest uppercase">{badge}</span>
+      <h2 class="font-heading text-3xl md:text-4xl font-bold mt-3 text-texto">
+        {title}
+      </h2>
+      <p class="text-texto-light mt-4 max-w-xl mx-auto">
+        {description}
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 md:gap-8 max-w-4xl mx-auto">
+      {items.map((c) => (
+        <div class={`rounded-2xl border-2 overflow-hidden transition-all hover:shadow-xl ${
+          c.popular
+            ? "border-vinotinto bg-white shadow-lg shadow-vinotinto/10 scale-105 md:scale-110 relative"
+            : "border-crema-dark bg-white"
+        }`}>
+          {c.popular && (
+            <div class="bg-vinotinto text-white text-center text-xs font-bold py-1.5 tracking-widest uppercase">
+              Más popular
+            </div>
+          )}
+          <div class="p-6 md:p-8 text-center">
+            <h3 class="font-heading text-2xl font-bold text-texto mb-4">{c.name}</h3>
+            <ul class="space-y-3 mb-6">
+              <li class="flex items-center justify-center gap-2 text-texto-light">
+                <svg class="w-4 h-4 text-vinotinto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {c.pieces}
+              </li>
+              <li class="flex items-center justify-center gap-2 text-texto-light">
+                <svg class="w-4 h-4 text-vinotinto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {c.salsas}
+              </li>
+            </ul>
+            <p class="font-heading text-3xl font-bold text-vinotinto mb-6">{c.price}</p>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={`inline-block w-full py-3 rounded-full font-semibold text-sm transition-all ${
+                c.popular
+                  ? "bg-vinotinto hover:bg-vinotinto-light text-white shadow-lg shadow-vinotinto/25"
+                  : "bg-crema hover:bg-crema-dark text-texto"
+              }`}
+            >
+              Pedir {c.name}
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

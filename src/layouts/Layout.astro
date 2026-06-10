@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+import { SITE } from '../lib/config';
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={SITE.description} />
+    <meta name="keywords" content={SITE.keywords} />
+    <meta property="og:title" content={SITE.ogTitle} />
+    <meta property="og:description" content={SITE.ogDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={SITE.url} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <title>{SITE.ogTitle}</title>
+  </head>
+  <body class="bg-crema text-texto antialiased">
+    <slot />
+  </body>
+</html>

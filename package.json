@@ -1,0 +1,25 @@
+{
+  "name": "guayafood-landing",
+  "type": "module",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "lint": "npx astro check"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.5",
+    "tailwindcss": "^4.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

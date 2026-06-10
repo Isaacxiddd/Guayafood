@@ -1,0 +1,50 @@
+---
+import { WHATSAPP, PRODUCTOS_SECTION } from '../lib/config';
+const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
+const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
+---
+
+<section id="productos" class="py-20 md:py-28 px-4 bg-crema">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-14">
+      <span class="text-vinotinto font-semibold text-sm tracking-widest uppercase">{badge}</span>
+      <h2 class="font-heading text-3xl md:text-4xl font-bold mt-3 text-texto">
+        {title}
+      </h2>
+      <p class="text-texto-light mt-4 max-w-xl mx-auto">
+        {description}
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 md:gap-8">
+      {items.map((p) => (
+        <div class="bg-white rounded-2xl border border-crema-dark overflow-hidden hover:shadow-xl transition-shadow group">
+          <div class="aspect-[4/3] bg-gradient-to-br from-vinotinto/5 to-oro/5 flex items-center justify-center">
+            <span class="text-6xl group-hover:scale-110 transition-transform duration-300">{p.emoji}</span>
+          </div>
+          <div class="p-6 md:p-8">
+            <h3 class="font-heading text-xl font-bold text-texto mb-2">{p.name}</h3>
+            <p class="text-texto-light text-sm leading-relaxed mb-4">{p.description}</p>
+            <div class="flex items-center justify-between">
+              <span class="text-vinotinto font-heading font-bold text-lg">{p.price}</span>
+              <a
+                href={`${waUrl}&${encodeURIComponent(` Quiero ${p.name}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sm font-semibold text-azul hover:text-azul-light transition-colors"
+              >
+                Pedir →
+              </a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="text-center mt-10">
+      <p class="text-texto-light text-sm">
+        {extras}
+      </p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,44 @@
+---
+import { WHATSAPP, HISTORIA } from '../lib/config';
+const waUrl = WHATSAPP.message(WHATSAPP.messages.general);
+---
+
+<section class="py-20 md:py-28 px-4 bg-white">
+  <div class="max-w-5xl mx-auto">
+    <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+      <div class="relative">
+        <div class="aspect-[4/5] rounded-2xl bg-gradient-to-br from-vinotinto/10 to-oro/10 overflow-hidden">
+          <div class="w-full h-full flex items-center justify-center">
+            <svg class="w-32 h-32 text-vinotinto/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-oro rounded-2xl -z-10 opacity-30"></div>
+        <div class="absolute -top-4 -left-4 w-20 h-20 bg-vinotinto rounded-2xl -z-10 opacity-20"></div>
+      </div>
+
+      <div>
+        <span class="text-vinotinto font-semibold text-sm tracking-widest uppercase">{HISTORIA.badge}</span>
+        <h2 class="font-heading text-3xl md:text-4xl font-bold mt-3 mb-6 text-texto">
+          {HISTORIA.title}
+        </h2>
+        <div class="space-y-4 text-texto-light leading-relaxed">
+          {HISTORIA.paragraphs.map((p) => (
+            <p>{p}</p>
+          ))}
+          <p class="font-heading italic text-lg text-vinotinto">
+            {HISTORIA.quote}
+          </p>
+        </div>
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-vinotinto font-semibold mt-6 hover:text-vinotinto-light transition-colors"
+        >
+          {HISTORIA.cta}
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
