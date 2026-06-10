@@ -121,7 +121,6 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 </div>
 
 <script>
-  const MP_API_URL = import.meta.env.PUBLIC_MP_API_URL || '/api/create-preference';
   const CHECK_API_URL = '/api/check-availability';
   const VALIDATE_ADDRESS_API = '/api/validate-address';
   const ADVANCE_HOURS = import.meta.env.PUBLIC_ADVANCE_HOURS
@@ -249,6 +248,9 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     fieldNotes.value = '';
     fieldDate.value = '';
     fieldTime.value = '';
+    addressValidated = false;
+    addressIsCaba = false;
+    addressError.className = 'text-red-500 text-xs mt-1';
     addressError.classList.add('hidden');
     dateError.classList.add('hidden');
     timeError.classList.add('hidden');
@@ -474,7 +476,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     window.open(waUrl, '_blank');
   });
 
-  btnMpPay.addEventListener('click', async () => {
+  btnMpPay.addEventListener('click', () => {
     const name = fieldName.value.trim();
     const phone = fieldPhone.value.trim();
     const address = fieldAddress.value.trim();
@@ -488,63 +490,23 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     if (!address) { fieldAddress.focus(); return; }
     if (!validateForm()) return;
 
-    btnMpPay.disabled = true;
-    btnMpPay.innerHTML = 'Verificando disponibilidad...';
-
-    const slotAvailable = await checkAvailability(date, time);
-    if (slotAvailable === false) {
-      btnMpPay.disabled = false;
-      btnMpPay.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg> Ir a pagar con Mercado Pago`;
-      return;
-    }
-
-    btnMpPay.innerHTML = 'Redirigiendo a Mercado Pago...';
-
     const total = currentData.unitPrice * quantity;
 
-    try {
-      const res = await fetch(MP_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
-          customer: { name, phone, address },
-          notes,
-          deliveryDate: date,
-          deliveryTime: time,
-          reference,
-        }),
-      });
+    sessionStorage.setItem('guayafood_order', JSON.stringify({
+      name,
+      phone,
+      address,
+      reference,
+      notes,
+      deliveryDate: date,
+      deliveryTime: time,
+      items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
+      total,
+    }));
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Error al crear el pago');
-      }
-
-      const data = await res.json();
-
-      sessionStorage.setItem('guayafood_order', JSON.stringify({
-        name,
-        phone,
-        address,
-        reference,
-        notes,
-        deliveryDate: date,
-        deliveryTime: time,
-        items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
-        total,
-        preferenceId: data.preference_id,
-      }));
-
-      window.location.href = data.init_point;
-    } catch (err) {
-      console.error(err);
-      btnMpPay.disabled = false;
-      btnMpPay.innerHTML = 'Error, intentá de nuevo';
-      setTimeout(() => {
-        btnMpPay.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg> Ir a pagar con Mercado Pago`;
-      }, 3000);
-    }
+    const checkoutLink = 'https://link.mercadopago.com.ar/guayafood';
+    window.open(checkoutLink, '_blank');
+    closeModal();
   });
 
   document.addEventListener('keydown', (e) => {
