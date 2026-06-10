@@ -1,0 +1,553 @@
+---
+import { WHATSAPP, MERCADOPAGO, DELIVERY } from '../lib/config';
+
+interface Props {
+  productName: string;
+  productPrice: string;
+  unitPrice: number;
+  emoji?: string;
+  description?: string;
+}
+
+const { productName, productPrice, unitPrice, emoji, description } = Astro.props;
+const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
+---
+
+<div
+  id="order-modal-overlay"
+  class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4"
+>
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          {emoji && <span class="text-3xl">{emoji}</span>}
+          <div>
+            <h3 class="font-heading text-lg font-bold text-texto" id="modal-title">{productName}</h3>
+            <p class="text-vinotinto font-semibold text-sm" id="modal-price">{productPrice}</p>
+          </div>
+        </div>
+        <button id="modal-close" class="text-texto-light hover:text-texto transition-colors text-2xl leading-none">&times;</button>
+      </div>
+
+      {description && (
+        <p class="text-texto-light text-xs mb-4 leading-relaxed">{description}</p>
+      )}
+
+      <div class="mb-5">
+        <label class="block text-sm font-semibold text-texto mb-2">Cantidad</label>
+        <div class="flex items-center gap-3">
+          <button id="qty-minus" class="w-10 h-10 rounded-full border border-crema-dark flex items-center justify-center text-lg font-bold text-texto hover:bg-crema transition-colors">−</button>
+          <span id="qty-value" class="text-2xl font-bold text-texto w-10 text-center">1</span>
+          <button id="qty-plus" class="w-10 h-10 rounded-full border border-crema-dark flex items-center justify-center text-lg font-bold text-texto hover:bg-crema transition-colors">+</button>
+        </div>
+      </div>
+
+      <div class="bg-crema rounded-xl p-4 mb-5 flex items-center justify-between">
+        <span class="text-sm font-semibold text-texto">Subtotal</span>
+        <span id="modal-subtotal" class="font-heading text-xl font-bold text-vinotinto">{productPrice}</span>
+      </div>
+
+      <div class="bg-azul/5 rounded-xl p-3 mb-5">
+        <p class="text-xs text-azul/80 leading-relaxed">
+          📍 Solo entregamos en <strong>Capital Federal</strong>.
+          Los pedidos se preparan con <strong>anticipación (mín 24 hs)</strong>.
+          Elegí una fecha y horario disponibles.
+        </p>
+      </div>
+
+      <div class="space-y-3 mb-5">
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Tu nombre</label>
+          <input id="field-name" type="text" placeholder="Ej: Leidy" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Teléfono</label>
+          <input id="field-phone" type="tel" placeholder="Ej: 11 1234 5678" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">
+            Dirección
+            <span class="text-xs text-vinotinto font-normal"> (solo Capital Federal)</span>
+          </label>
+          <input id="field-address" type="text" placeholder="Ej: Av. Corrientes 1234, CABA" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
+          <p id="address-error" class="text-red-500 text-xs mt-1 hidden">Solo entregamos en Capital Federal. Ingresá una dirección en CABA.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Fecha de entrega <span class="text-xs text-vinotinto">(pedí con anticipación)</span></label>
+          <input id="field-date" type="date" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
+          <p id="date-error" class="text-red-500 text-xs mt-1 hidden"></p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Horario de entrega</label>
+          <select id="field-time" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white">
+            <option value="">Seleccioná un horario</option>
+            {DELIVERY.timeSlots.map((s) => (
+              <option value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <p id="time-error" class="text-red-500 text-xs mt-1 hidden"></p>
+        </div>
+        <div id="slot-availability" class="hidden">
+          <div class="flex items-center gap-2 text-xs">
+            <span id="slot-status-icon" class="text-lg"></span>
+            <span id="slot-status-text" class="text-texto-light"></span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Referencia del lugar (opcional)</label>
+          <input id="field-reference" type="text" placeholder="Ej: Dpto 3B, timbre 5, edificio blanco" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-texto mb-1">Notas (opcional)</label>
+          <textarea id="field-notes" rows="2" placeholder="Ej: Preferencia horaria, timbre, etc." class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white resize-none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <button id="btn-mp-pay" class="w-full bg-[#00BFFF] hover:bg-[#009ACD] text-white font-bold py-3 px-6 rounded-full text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg>
+          Ir a pagar con Mercado Pago
+        </button>
+        <button id="btn-wa-order" class="w-full text-center bg-crema hover:bg-crema-dark text-texto font-semibold py-3 px-6 rounded-full text-sm transition-all border border-crema-dark">
+          Mandar pedido por WhatsApp
+        </button>
+        <button id="btn-test-data" class="w-full text-center text-xs text-azul/50 hover:text-azul transition-colors mt-1 py-1">
+          🧪 Completar datos de prueba
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const MP_API_URL = import.meta.env.PUBLIC_MP_API_URL || '/api/create-preference';
+  const CHECK_API_URL = '/api/check-availability';
+  const VALIDATE_ADDRESS_API = '/api/validate-address';
+  const ADVANCE_HOURS = import.meta.env.PUBLIC_ADVANCE_HOURS
+    ? parseInt(import.meta.env.PUBLIC_ADVANCE_HOURS, 10)
+    : 24;
+  const MAX_ORDERS_PER_SLOT = import.meta.env.PUBLIC_MAX_ORDERS_PER_SLOT
+    ? parseInt(import.meta.env.PUBLIC_MAX_ORDERS_PER_SLOT, 10)
+    : 3;
+
+  const modalOverlay = document.getElementById('order-modal-overlay');
+  const modalClose = document.getElementById('modal-close');
+  const modalTitle = document.getElementById('modal-title');
+  const modalPrice = document.getElementById('modal-price');
+  const qtyMinus = document.getElementById('qty-minus');
+  const qtyPlus = document.getElementById('qty-plus');
+  const qtyValue = document.getElementById('qty-value');
+  const modalSubtotal = document.getElementById('modal-subtotal');
+  const fieldName = document.getElementById('field-name');
+  const fieldPhone = document.getElementById('field-phone');
+  const fieldAddress = document.getElementById('field-address');
+  const addressError = document.getElementById('address-error');
+  const fieldDate = document.getElementById('field-date');
+  const dateError = document.getElementById('date-error');
+  const fieldTime = document.getElementById('field-time');
+  const timeError = document.getElementById('time-error');
+  const slotAvailability = document.getElementById('slot-availability');
+  const slotStatusIcon = document.getElementById('slot-status-icon');
+  const slotStatusText = document.getElementById('slot-status-text');
+  const fieldReference = document.getElementById('field-reference');
+  const fieldNotes = document.getElementById('field-notes');
+  const btnMpPay = document.getElementById('btn-mp-pay');
+  const btnWaOrder = document.getElementById('btn-wa-order');
+  const modalEmoji = document.querySelector('#order-modal-overlay .flex.items-center.gap-3 .text-3xl');
+
+  let currentData = { unitPrice: 0, name: '', price: '' };
+  let quantity = 1;
+  let lastCheckedSlot = '';
+
+  function parsePriceToNumber(priceStr) {
+    const num = priceStr.replace(/[^0-9]/g, '');
+    return parseInt(num, 10) || 0;
+  }
+
+  function formatPrice(num) {
+    return '$' + num.toLocaleString('es-AR');
+  }
+
+  let addressValidated = false;
+  let addressIsCaba = false;
+  let addressChecking = false;
+
+  function isCapitalFederalClient(address) {
+    const lower = (address || '').toLowerCase();
+    const keywords = ['capital federal', 'caba', 'buenos aires', 'ciudad autonoma de buenos aires'];
+    if (keywords.some((kw) => lower.includes(kw))) return true;
+    const cpMatch = lower.match(/\bc\d{4}\b/);
+    if (cpMatch) {
+      const num = parseInt(cpMatch[0].slice(1), 10);
+      if (num >= 1000 && num <= 1999) return true;
+    }
+    return false;
+  }
+
+  function isCapitalFederal(address) {
+    return isCapitalFederalClient(address);
+  }
+
+  async function validateAddressViaAPI(address) {
+    if (!address) return false;
+    addressChecking = true;
+
+    const quickCheck = isCapitalFederalClient(address);
+    if (quickCheck) {
+      addressValidated = true;
+      addressIsCaba = true;
+      addressChecking = false;
+      return true;
+    }
+
+    addressError.textContent = 'Verificando dirección...';
+    addressError.className = 'text-azul text-xs mt-1';
+    addressError.classList.remove('hidden');
+    try {
+      const res = await fetch(VALIDATE_ADDRESS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const data = await res.json();
+      addressValidated = true;
+      addressIsCaba = data.isCaba;
+      return data.isCaba;
+    } catch {
+      addressValidated = true;
+      addressIsCaba = quickCheck;
+      return quickCheck;
+    } finally {
+      addressChecking = false;
+    }
+  }
+
+  function getMinDate() {
+    const now = new Date();
+    now.setHours(now.getHours() + ADVANCE_HOURS);
+    return now.toISOString().slice(0, 10);
+  }
+
+  function updateSubtotal() {
+    const total = currentData.unitPrice * quantity;
+    modalSubtotal.textContent = formatPrice(total);
+  }
+
+  function openModal(data) {
+    currentData = data;
+    quantity = 1;
+    qtyValue.textContent = '1';
+    if (modalEmoji) modalEmoji.textContent = data.emoji || '';
+    modalTitle.textContent = data.name;
+    modalPrice.textContent = data.price;
+    modalSubtotal.textContent = data.price;
+    fieldName.value = '';
+    fieldPhone.value = '';
+    fieldAddress.value = '';
+    fieldReference.value = '';
+    fieldNotes.value = '';
+    fieldDate.value = '';
+    fieldTime.value = '';
+    addressError.classList.add('hidden');
+    dateError.classList.add('hidden');
+    timeError.classList.add('hidden');
+    slotAvailability.classList.add('hidden');
+    lastCheckedSlot = '';
+    btnMpPay.disabled = false;
+    btnMpPay.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg> Ir a pagar con Mercado Pago`;
+    modalOverlay.classList.remove('hidden');
+    modalOverlay.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    fieldDate.min = getMinDate();
+  }
+
+  function closeModal() {
+    modalOverlay.classList.add('hidden');
+    modalOverlay.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  window.openOrderModal = openModal;
+
+  modalClose.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  qtyMinus.addEventListener('click', () => {
+    if (quantity > 1) {
+      quantity--;
+      qtyValue.textContent = quantity;
+      updateSubtotal();
+    }
+  });
+
+  qtyPlus.addEventListener('click', () => {
+    if (quantity < 100) {
+      quantity++;
+      qtyValue.textContent = quantity;
+      updateSubtotal();
+    }
+  });
+
+  function validateDate(dateStr) {
+    if (!dateStr) {
+      dateError.textContent = 'Seleccioná una fecha de entrega.';
+      dateError.classList.remove('hidden');
+      return false;
+    }
+    const selected = new Date(dateStr + 'T12:00:00');
+    const day = selected.getDay();
+    if (day === 0) {
+      dateError.textContent = 'No entregamos los domingos. Elegí otro día.';
+      dateError.classList.remove('hidden');
+      return false;
+    }
+    const minDate = new Date(getMinDate() + 'T00:00:00');
+    if (selected < minDate) {
+      dateError.textContent = `La fecha debe ser al menos ${ADVANCE_HOURS} hs después del momento actual.`;
+      dateError.classList.remove('hidden');
+      return false;
+    }
+    dateError.classList.add('hidden');
+    return true;
+  }
+
+  function validateTime(timeStr) {
+    if (!timeStr) {
+      timeError.textContent = 'Seleccioná un horario de entrega.';
+      timeError.classList.remove('hidden');
+      return false;
+    }
+    timeError.classList.add('hidden');
+    return true;
+  }
+
+  async function checkAvailability(dateStr, timeStr) {
+    const slotKey = dateStr + '|' + timeStr;
+    if (slotKey === lastCheckedSlot) return;
+    lastCheckedSlot = slotKey;
+
+    slotAvailability.classList.remove('hidden');
+    slotStatusIcon.textContent = '⏳';
+    slotStatusText.textContent = 'Verificando disponibilidad...';
+
+    try {
+      const res = await fetch(CHECK_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateStr, time: timeStr }),
+      });
+      const data = await res.json();
+      if (data.available) {
+        slotStatusIcon.textContent = '✅';
+        slotStatusText.textContent = `Disponible (${data.currentCount}/${MAX_ORDERS_PER_SLOT} reservas)`;
+      } else {
+        slotStatusIcon.textContent = '❌';
+        slotStatusText.textContent = data.message || 'Este horario ya está completo. Elegí otro.';
+      }
+    } catch {
+      slotAvailability.classList.add('hidden');
+    }
+  }
+
+  fieldDate.addEventListener('change', () => {
+    const date = fieldDate.value;
+    validateDate(date);
+    if (fieldTime.value) {
+      checkAvailability(date, fieldTime.value);
+    }
+  });
+
+  fieldTime.addEventListener('change', () => {
+    const time = fieldTime.value;
+    validateTime(time);
+    if (fieldDate.value) {
+      checkAvailability(fieldDate.value, time);
+    }
+  });
+
+  const btnTestData = document.getElementById('btn-test-data');
+  btnTestData.addEventListener('click', () => {
+    fieldName.value = 'Leidy';
+    fieldPhone.value = '11 1234 5678';
+    fieldAddress.value = '';
+    fieldReference.value = 'Dpto 4B';
+    fieldNotes.value = 'Test de pedido';
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const ymd = tomorrow.toISOString().slice(0, 10);
+    fieldDate.value = ymd;
+    fieldDate.dispatchEvent(new Event('change', { bubbles: true }));
+
+    fieldTime.value = '14:00-16:00';
+    fieldTime.dispatchEvent(new Event('change', { bubbles: true }));
+
+    addressValidated = false;
+    addressIsCaba = false;
+    addressError.classList.add('hidden');
+    fieldAddress.value = 'Biarritz 1893, CABA';
+    fieldAddress.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  let addressCheckTimeout;
+
+  fieldAddress.addEventListener('input', () => {
+    clearTimeout(addressCheckTimeout);
+    addressValidated = false;
+    addressError.classList.add('hidden');
+    addressCheckTimeout = setTimeout(async () => {
+      const addr = fieldAddress.value.trim();
+      if (addr.length >= 5) {
+        await validateAddressViaAPI(addr);
+        if (addressIsCaba) {
+          addressError.className = 'text-green-600 text-xs mt-1';
+          addressError.textContent = '✅ Dirección en Capital Federal';
+          addressError.classList.remove('hidden');
+        } else {
+          addressError.className = 'text-red-500 text-xs mt-1';
+          addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
+          addressError.classList.remove('hidden');
+        }
+      }
+    }, 600);
+  });
+
+  async function validateForm() {
+    const address = fieldAddress.value.trim();
+    if (!address) { fieldAddress.focus(); return false; }
+
+    if (!addressValidated) {
+      const ok = await validateAddressViaAPI(address);
+      if (!ok) {
+        addressError.className = 'text-red-500 text-xs mt-1';
+        addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
+        addressError.classList.remove('hidden');
+        fieldAddress.focus();
+        return false;
+      }
+    } else if (!addressIsCaba) {
+      addressError.className = 'text-red-500 text-xs mt-1';
+      addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
+      addressError.classList.remove('hidden');
+      fieldAddress.focus();
+      return false;
+    }
+
+    addressError.classList.add('hidden');
+    if (!validateDate(fieldDate.value)) return false;
+    if (!validateTime(fieldTime.value)) return false;
+    return true;
+  }
+
+  function buildWaText() {
+    const name = fieldName.value.trim();
+    const phone = fieldPhone.value.trim();
+    const address = fieldAddress.value.trim();
+    const date = fieldDate.value;
+    const time = fieldTime.value;
+    const reference = fieldReference.value.trim();
+    const notes = fieldNotes.value.trim();
+    const total = currentData.unitPrice * quantity;
+
+    let text = `Hola! Quiero hacer un pedido 🥟\n\n`;
+    text += `📦 Producto: ${currentData.name}\n`;
+    text += `🔢 Cantidad: ${quantity}\n`;
+    text += `💰 Total: ${formatPrice(total)}\n`;
+    text += `👤 Nombre: ${name}\n`;
+    text += `📞 Teléfono: ${phone}\n`;
+    text += `📍 Dirección: ${address}\n`;
+    if (reference) text += `🏠 Referencia: ${reference}\n`;
+    text += `📅 Fecha: ${date}\n`;
+    text += `⏰ Horario: ${time}\n`;
+    if (notes) text += `📝 Notas: ${notes}\n`;
+
+    return text;
+  }
+
+  btnWaOrder.addEventListener('click', () => {
+    if (!validateForm()) return;
+    const text = buildWaText();
+    const waUrl = `https://wa.me/5491123861180?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+  });
+
+  btnMpPay.addEventListener('click', async () => {
+    const name = fieldName.value.trim();
+    const phone = fieldPhone.value.trim();
+    const address = fieldAddress.value.trim();
+    const date = fieldDate.value;
+    const time = fieldTime.value;
+    const reference = fieldReference.value.trim();
+    const notes = fieldNotes.value.trim();
+
+    if (!name) { fieldName.focus(); return; }
+    if (!phone) { fieldPhone.focus(); return; }
+    if (!address) { fieldAddress.focus(); return; }
+    if (!validateForm()) return;
+
+    btnMpPay.disabled = true;
+    btnMpPay.innerHTML = 'Verificando disponibilidad...';
+
+    const slotAvailable = await checkAvailability(date, time);
+    if (slotAvailable === false) {
+      btnMpPay.disabled = false;
+      btnMpPay.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg> Ir a pagar con Mercado Pago`;
+      return;
+    }
+
+    btnMpPay.innerHTML = 'Redirigiendo a Mercado Pago...';
+
+    const total = currentData.unitPrice * quantity;
+
+    try {
+      const res = await fetch(MP_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
+          customer: { name, phone, address },
+          notes,
+          deliveryDate: date,
+          deliveryTime: time,
+          reference,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al crear el pago');
+      }
+
+      const data = await res.json();
+
+      sessionStorage.setItem('guayafood_order', JSON.stringify({
+        name,
+        phone,
+        address,
+        reference,
+        notes,
+        deliveryDate: date,
+        deliveryTime: time,
+        items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
+        total,
+        preferenceId: data.preference_id,
+      }));
+
+      window.location.href = data.init_point;
+    } catch (err) {
+      console.error(err);
+      btnMpPay.disabled = false;
+      btnMpPay.innerHTML = 'Error, intentá de nuevo';
+      setTimeout(() => {
+        btnMpPay.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.37V7z"/></svg> Ir a pagar con Mercado Pago`;
+      }, 3000);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+</script>

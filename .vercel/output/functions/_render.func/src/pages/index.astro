@@ -27,39 +27,7 @@ import Footer from '../components/Footer.astro';
   const status = params.get('status');
   const preferenceId = params.get('preference_id');
 
-  async function saveOrder(data) {
-    try {
-      await fetch('/api/save-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          preferenceId: data.preferenceId,
-          status: 'approved',
-          name: data.name,
-          phone: data.phone,
-          address: data.address,
-          reference: data.reference || '',
-          items: data.items,
-          total: data.total,
-          notes: data.notes || '',
-          deliveryDate: data.deliveryDate || '',
-          deliveryTime: data.deliveryTime || '',
-        }),
-      });
-    } catch (err) {
-      console.error('Error saving order:', err);
-    }
-  }
-
   if (status === 'approved') {
-    const orderData = sessionStorage.getItem('guayafood_order');
-    if (orderData) {
-      const data = JSON.parse(orderData);
-      data.preferenceId = preferenceId || data.preferenceId;
-      saveOrder(data);
-      sessionStorage.removeItem('guayafood_order');
-    }
-
     const div = document.getElementById('payment-status');
     div.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center';
     div.innerHTML = `
@@ -73,8 +41,6 @@ import Footer from '../components/Footer.astro';
 
     window.history.replaceState({}, '', '/');
   } else if (status === 'failure') {
-    sessionStorage.removeItem('guayafood_order');
-
     const div = document.getElementById('payment-status');
     div.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center';
     div.innerHTML = `
@@ -82,18 +48,6 @@ import Footer from '../components/Footer.astro';
       <h3 class="font-bold text-lg mb-1">Pago no completado</h3>
       <p class="text-red-100 text-sm mb-3">El pago no pudo procesarse. Podés intentar de nuevo o pedir por WhatsApp.</p>
       <button onclick="this.parentElement.remove()" class="mt-3 text-xs text-red-200 underline">Cerrar</button>
-    `;
-    div.classList.remove('hidden');
-
-    window.history.replaceState({}, '', '/');
-  } else if (status === 'pending') {
-    const div = document.getElementById('payment-status');
-    div.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-yellow-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center';
-    div.innerHTML = `
-      <span class="text-3xl block mb-2">⏳</span>
-      <h3 class="font-bold text-lg mb-1">Pago pendiente</h3>
-      <p class="text-yellow-100 text-sm mb-3">Estamos esperando la confirmación del pago.</p>
-      <button onclick="this.parentElement.remove()" class="mt-3 text-xs text-yellow-200 underline">Cerrar</button>
     `;
     div.classList.remove('hidden');
 

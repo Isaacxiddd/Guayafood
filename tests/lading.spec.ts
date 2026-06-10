@@ -19,7 +19,7 @@ test.describe('Guayafood Landing Page', () => {
 
   test('navigation links work', async ({ page }) => {
     await page.goto('/');
-    const productosLink = page.locator('a[href="#productos"]');
+    const productosLink = page.getByRole('link', { name: 'Ver productos' });
     await expect(productosLink).toBeVisible();
 
     await productosLink.click();
@@ -75,7 +75,7 @@ test.describe('Guayafood Landing Page', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
     await expect(page.locator('nav')).toBeVisible();
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /corazón/ })).toBeVisible();
   });
 
   test('404 page works', async ({ page }) => {

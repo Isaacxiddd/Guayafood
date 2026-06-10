@@ -1,9 +1,12 @@
 ---
 import { WHATSAPP, COMBOS_SECTION } from '../lib/config';
 import PaymentButton from './PaymentButton.astro';
+import OrderModal from './OrderModal.astro';
 const waUrl = WHATSAPP.message(WHATSAPP.messages.combos);
 const { badge, title, description, items } = COMBOS_SECTION;
 ---
+
+<OrderModal productName="" productPrice="" unitPrice={0} />
 
 <section id="combos" class="py-20 md:py-28 px-4 bg-white">
   <div class="max-w-6xl mx-auto">
@@ -55,7 +58,12 @@ const { badge, title, description, items } = COMBOS_SECTION;
               >
                 Pedir {c.name} por WhatsApp
               </a>
-              <PaymentButton title={c.name} unitPrice={c.unitPrice} description={`${c.pieces} - ${c.salsas}`} />
+              <PaymentButton
+                productName={c.name}
+                productPrice={c.price}
+                unitPrice={c.unitPrice}
+                description={`${c.pieces} - ${c.salsas}`}
+              />
             </div>
           </div>
         </div>

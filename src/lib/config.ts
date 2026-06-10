@@ -139,6 +139,20 @@ export const NOT_FOUND = {
   cta: 'Volver al inicio',
 };
 
+export const DELIVERY = {
+  zones: ['Capital Federal', 'CABA'],
+  advanceHours: 24,
+  workingDays: [1, 2, 3, 4, 5, 6],
+  maxOrdersPerSlot: 3,
+  timeSlots: [
+    { label: '10:00 - 12:00 hs', value: '10:00-12:00' },
+    { label: '14:00 - 16:00 hs', value: '14:00-16:00' },
+    { label: '17:00 - 19:00 hs', value: '17:00-19:00' },
+    { label: '19:00 - 21:00 hs', value: '19:00-21:00' },
+  ],
+  warningText: '📍 Solo entregamos en Capital Federal. Pedí con anticipación (mín 24 hs).',
+};
+
 export const MERCADOPAGO = {
   apiUrl: '/api/create-preference',
   checkoutLink: 'https://link.mercadopago.com.ar/guayafood',

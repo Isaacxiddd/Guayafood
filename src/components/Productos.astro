@@ -1,9 +1,12 @@
 ---
 import { WHATSAPP, PRODUCTOS_SECTION } from '../lib/config';
 import PaymentButton from './PaymentButton.astro';
+import OrderModal from './OrderModal.astro';
 const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
 ---
+
+<OrderModal productName="" productPrice="" unitPrice={0} />
 
 <section id="productos" class="py-20 md:py-28 px-4 bg-crema">
   <div class="max-w-6xl mx-auto">
@@ -32,11 +35,17 @@ const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
                 href={`${waUrl}&${encodeURIComponent(` Quiero ${p.name}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-sm font-semibold text-azul hover:text-azul-light transition-colors"
+                class="text-sm font-semibold text-azul hover:text-azul-light transition-colors text-center"
               >
                 Pedir por WhatsApp →
               </a>
-              <PaymentButton title={p.name} unitPrice={p.unitPrice} description={p.description} />
+              <PaymentButton
+                productName={p.name}
+                productPrice={p.price}
+                unitPrice={p.unitPrice}
+                emoji={p.emoji}
+                description={p.description}
+              />
             </div>
           </div>
         </div>
