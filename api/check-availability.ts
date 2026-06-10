@@ -3,6 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 const MAX_ORDERS_PER_SLOT = parseInt(process.env.PUBLIC_MAX_ORDERS_PER_SLOT || '3', 10);
+const MAX_BODY_SIZE = 10_000;
 
 function getAuth() {
   const base64 = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -34,7 +35,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   try {
     const chunks: Buffer[] = [];
-    for await (const chunk of req) chunks.push(chunk);
+    let totalBytes = 0;
+    for await (const chunk of req) {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_BODY_SIZE) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Request body too large' }));
+        return;
+      }
+      chunks.push(chunk);
+    }
     body = JSON.parse(Buffer.concat(chunks).toString());
   } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });

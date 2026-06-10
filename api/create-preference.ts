@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+const MAX_BODY_SIZE = 100_000;
 const ADVANCE_HOURS = parseInt(process.env.PUBLIC_ADVANCE_HOURS || '24', 10);
 const WORKING_DAYS = [1, 2, 3, 4, 5, 6];
 
@@ -50,7 +51,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   try {
     const chunks: Buffer[] = [];
-    for await (const chunk of req) chunks.push(chunk);
+    let totalBytes = 0;
+    for await (const chunk of req) {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_BODY_SIZE) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Request body too large' }));
+        return;
+      }
+      chunks.push(chunk);
+    }
     body = JSON.parse(Buffer.concat(chunks).toString());
   } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -126,7 +136,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     if (!response.ok) {
       console.error('MP API error:', JSON.stringify(data));
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: `Error de Mercado Pago: ${data.message || data.error || response.statusText}` }));
+      res.end(JSON.stringify({ error: 'Error al procesar el pago. Intentalo de nuevo.' }));
       return;
     }
 
@@ -136,9 +146,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       init_point: data.init_point,
     }));
   } catch (error) {
-    const text = error instanceof Error ? `${error.name}: ${error.message}` : JSON.stringify(error);
-    console.error('Mercado Pago error:', text);
+    console.error('Mercado Pago error:', error instanceof Error ? error.message : error);
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: `Error interno: ${text}` }));
+    res.end(JSON.stringify({ error: 'Error interno del servidor' }));
   }
 }

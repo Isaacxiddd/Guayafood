@@ -2,8 +2,9 @@
   "name": "guayafood-landing",
   "type": "module",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.5.2",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "dev": "astro dev",

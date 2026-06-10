@@ -2,6 +2,14 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
+const MAX_BODY_SIZE = 100_000;
+
+function sanitizeSheetValue(value: string): string {
+  if (typeof value !== 'string') return value;
+  if (/^[=+\-@]/.test(value)) return `'${value}`;
+  return value;
+}
+
 function getAuth() {
   const base64 = process.env.GOOGLE_CREDENTIALS_BASE64;
   if (!base64) return null;
@@ -44,7 +52,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   try {
     const chunks: Buffer[] = [];
-    for await (const chunk of req) chunks.push(chunk);
+    let totalBytes = 0;
+    for await (const chunk of req) {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_BODY_SIZE) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Request body too large' }));
+        return;
+      }
+      chunks.push(chunk);
+    }
     body = JSON.parse(Buffer.concat(chunks).toString());
   } catch {
     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -91,13 +108,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         Fecha: new Date().toISOString(),
         'Preference ID': body.preferenceId,
         Estado: body.status,
-        Nombre: body.name,
-        Teléfono: body.phone,
-        Dirección: body.address,
-        Referencia: body.reference || '',
-        Productos: body.items.map((i) => `${i.title} x${i.quantity}`).join(', '),
+        Nombre: sanitizeSheetValue(body.name),
+        Teléfono: sanitizeSheetValue(body.phone),
+        Dirección: sanitizeSheetValue(body.address),
+        Referencia: sanitizeSheetValue(body.reference || ''),
+        Productos: body.items.map((i) => `${sanitizeSheetValue(i.title)} x${i.quantity}`).join(', '),
         Total: `$${body.total.toLocaleString('es-AR')}`,
-        Notas: body.notes || '',
+        Notas: sanitizeSheetValue(body.notes || ''),
         'Fecha de entrega': body.deliveryDate || '',
         Horario: body.deliveryTime || '',
       });

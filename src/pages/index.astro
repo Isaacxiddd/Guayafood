@@ -27,14 +27,17 @@ import Footer from '../components/Footer.astro';
   const params = new URLSearchParams(window.location.search);
   const status = params.get('status');
 
+  if (!status) {
+    sessionStorage.removeItem('guayafood_order');
+  }
+
   function getOrderData() {
-    const raw = localStorage.getItem('guayafood_order') || sessionStorage.getItem('guayafood_order');
+    const raw = sessionStorage.getItem('guayafood_order');
     if (!raw) return null;
     try { return JSON.parse(raw); } catch { return null; }
   }
 
   function clearOrderData() {
-    localStorage.removeItem('guayafood_order');
     sessionStorage.removeItem('guayafood_order');
   }
 
