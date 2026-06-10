@@ -246,6 +246,6 @@ import Footer from '../components/Footer.astro';
       preferenceId: testId,
     };
     sessionStorage.setItem('guayafood_order', JSON.stringify(testData));
-    window.location.href = '/?status=approved&payment_id=test_' + Date.now();
+    window.location.href = '/?status=approved';
   });
 </script>
