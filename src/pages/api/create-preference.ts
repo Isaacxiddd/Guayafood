@@ -119,6 +119,7 @@ export const POST: APIRoute = async ({ request }) => {
         pending: `${siteUrl}/?status=pending`,
       },
       auto_return: 'approved',
+      notification_url: `${siteUrl}/api/mercadopago-webhook`,
       external_reference: `order_${Date.now()}_${body.deliveryDate}_${body.deliveryTime}`,
     };
 

@@ -130,14 +130,32 @@ import Footer from '../components/Footer.astro';
   }
 
   if (status === 'approved') {
-    const data = getOrderData();
-    if (data) {
-      saveOrder(data);
-      clearOrderData();
-      showBanner('approved', data);
-    } else {
-      showBanner('approved', null);
-    }
+    (async () => {
+      let verified = !paymentId;
+      if (paymentId) {
+        try {
+          const res = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_id: paymentId }),
+          });
+          const data = await res.json();
+          verified = data.verified === true;
+        } catch {
+          verified = false;
+        }
+      }
+      if (verified) {
+        const data = getOrderData();
+        if (data) {
+          saveOrder(data);
+          clearOrderData();
+        }
+        showBanner('approved', data);
+      } else {
+        showBanner('failure');
+      }
+    })();
     window.history.replaceState({}, '', '/');
   } else if (status === 'failure') {
     clearOrderData();
