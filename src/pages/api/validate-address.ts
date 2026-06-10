@@ -3,6 +3,22 @@ import { getClientIp, checkRateLimit } from '../../lib/rate-limit';
 
 export const prerender = false;
 
+const CABA_BARRIOS = [
+  'capital federal', 'caba', 'buenos aires', 'ciudad autonoma de buenos aires',
+  'agronomía', 'almagro', 'balvanera', 'barracas', 'belgrano', 'boedo',
+  'caballito', 'chacarita', 'colegiales', 'constitución', 'flores', 'floresta',
+  'la boca', 'la paternal', 'liniers', 'mataderos', 'monte castro', 'montserrat',
+  'nueva pompeya', 'nuñez', 'palermo', 'parque avellaneda', 'parque chacabuco',
+  'parque patricios', 'puerto madero', 'recoleta', 'retiro', 'saavedra',
+  'san cristóbal', 'san nicolás', 'san telmo', 'versalles', 'villa crespo',
+  'villa del parque', 'villa devoto', 'villa general mitre', 'villa lugano',
+  'villa luro', 'villa ortúzar', 'villa pueyrredón', 'villa real',
+  'villa riachuelo', 'villa santa rita', 'villa soldati', 'villa urquiza',
+  'villa de mayo', 'coghlan', 'palermo viejo', 'palermo soho', 'palermo hollywood',
+  'las cañitas', 'abasto', 'once', 'congreso', 'tribunales', 'microcentro',
+  'barrio norte', 'barrio sur',
+];
+
 function extractPostalCode(address: string): string | null {
   const match = address.match(/\bC\d{4}\b/);
   return match ? match[0] : null;
@@ -10,11 +26,7 @@ function extractPostalCode(address: string): string | null {
 
 function keywordCheck(address: string): boolean {
   const lower = address.toLowerCase();
-  const keywords = [
-    'capital federal', 'caba', 'buenos aires',
-    'ciudad autonoma de buenos aires',
-  ];
-  return keywords.some((kw) => lower.includes(kw));
+  return CABA_BARRIOS.some((b) => lower.includes(b));
 }
 
 function zipCodeCheck(address: string): boolean {
@@ -24,21 +36,28 @@ function zipCodeCheck(address: string): boolean {
   return num >= 1000 && num <= 1999;
 }
 
-async function georefCheck(address: string): Promise<{ isCaba: boolean; confidence: string } | null> {
+async function nominatimCheck(address: string): Promise<{ isCaba: boolean; confidence: string } | null> {
   try {
-    const encoded = encodeURIComponent(address);
-    const url = `https://apis.gob.ar/georef/api/direcciones?direccion=${encoded}&provincia=Ciudad Aut%C3%B3noma de Buenos Aires&max_resultados=1`;
+    const encoded = encodeURIComponent(`${address}, Buenos Aires, Argentina`);
+    const url = `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&addressdetails=1&limit=1`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(url, { signal: controller.signal });
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Guayafood/1.0 (https://guayafood.vercel.app)' },
+    });
     clearTimeout(timeout);
     if (!res.ok) return null;
     const data = await res.json();
-    const cantResultados = data.cantidad || 0;
-    if (cantResultados > 0) {
-      return { isCaba: true, confidence: 'alta' };
-    }
-    return { isCaba: false, confidence: 'baja' };
+    if (!data?.length) return null;
+    const state = (data[0].address?.state || '').toLowerCase();
+    const city = (data[0].address?.city || '').toLowerCase();
+    const isCaba = state.includes('ciudad autónoma de buenos aires')
+      || state.includes('buenos aires')
+      || city.includes('caba')
+      || city.includes('capital federal')
+      || city.includes('ciudad autónoma');
+    return { isCaba, confidence: isCaba ? 'alta' : 'baja' };
   } catch {
     return null;
   }
@@ -87,13 +106,13 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const georefResult = await georefCheck(address);
+  const osmResult = await nominatimCheck(address);
 
-  if (georefResult) {
+  if (osmResult) {
     return new Response(JSON.stringify({
-      isCaba: georefResult.isCaba,
-      method: 'georef',
-      confidence: georefResult.confidence,
+      isCaba: osmResult.isCaba,
+      method: 'osm',
+      confidence: osmResult.confidence,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

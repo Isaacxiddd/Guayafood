@@ -73,8 +73,15 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const addr = body.customer.address.toLowerCase();
-  const isCaba = ['capital federal', 'caba', 'buenos aires', 'ciudad autonoma de buenos aires'].some((k) => addr.includes(k))
-    || /\bc\d{4}\b/.test(addr);
+  const cabaKeywords = [
+    'capital federal', 'caba', 'buenos aires', 'ciudad autonoma de buenos aires',
+    'palermo', 'belgrano', 'recoleta', 'flores', 'floresta', 'almagro', 'caballito',
+    'nuñez', 'saavedra', 'villa crespo', 'villa devoto', 'villa urquiza',
+    'barracas', 'boedo', 'san telmo', 'la boca', 'montserrat', 'retiro',
+    'puerto madero', 'chacarita', 'colegiales', 'balvanera',
+  ];
+  const isCaba = cabaKeywords.some((k) => addr.includes(k))
+    || (() => { const m = addr.match(/\bc(\d{4})\b/); return m && +m[1] >= 1000 && +m[1] <= 1999; })();
 
   if (!isCaba) {
     return new Response(JSON.stringify({ error: 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.' }), {
