@@ -13,6 +13,9 @@ import Footer from '../components/Footer.astro';
 
 <Layout>
   <div id="payment-status" class="hidden"></div>
+  <button id="btn-test-payment" class="fixed bottom-4 right-4 z-50 bg-gray-800/80 hover:bg-gray-700 text-white text-xs px-3 py-2 rounded-full opacity-40 hover:opacity-100 transition-opacity backdrop-blur-sm">
+    🧪 Simular pago
+  </button>
   <Nav />
   <Hero />
   <Historia />
@@ -222,4 +225,27 @@ import Footer from '../components/Footer.astro';
       setTimeout(() => div.classList.add('hidden'), 3000);
     }
   };
+
+  document.getElementById('btn-test-payment')?.addEventListener('click', () => {
+    const testId = 'test_' + Date.now();
+    const today = new Date().toISOString().split('T')[0];
+    const testData = {
+      name: 'Test Automático',
+      phone: '1123456789',
+      address: 'Av. Siempre Viva 123',
+      barrio: 'Palermo',
+      reference: 'Test desde página',
+      notes: 'Pedido de prueba - ignorar',
+      deliveryDate: today,
+      deliveryTime: '14:00-16:00',
+      items: [
+        { title: 'Empanadita carne', quantity: 2, unitPrice: 500 },
+        { title: 'Tequeño', quantity: 1, unitPrice: 300 },
+      ],
+      total: 1300,
+      preferenceId: testId,
+    };
+    sessionStorage.setItem('guayafood_order', JSON.stringify(testData));
+    window.location.href = '/?status=approved&payment_id=test_' + Date.now();
+  });
 </script>

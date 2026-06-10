@@ -92,36 +92,37 @@ export const POST: APIRoute = async ({ request }) => {
         sheet = await doc.addSheet({ title: 'Pedidos' });
       }
 
-      const headers = [
-        'Fecha', 'Preference ID', 'Estado', 'Nombre', 'Teléfono',
-        'Dirección', 'Barrio', 'Referencia', 'Productos', 'Total', 'Notas',
-        'Fecha de entrega', 'Horario',
-      ];
-
       if (!sheet.headerValues || sheet.headerValues.length === 0) {
-        await sheet.setHeaderRow(headers);
+        await sheet.setHeaderRow([
+          'ID', 'Fecha pedido', 'Nombre cliente', 'WhatsApp', 'Producto',
+          'Combo', 'Cantidad', 'Precio unit. ($)', 'Total ($)', 'Delivery ($)',
+          'Seña ($)', 'Saldo ($)', 'Origen', 'Método pago', 'Fecha entrega',
+          'Dirección', 'Zona/Barrio', 'Estado', 'Notas',
+        ]);
       }
 
-      const existingHeaders = sheet.headerValues || [];
-      const missingHeaders = headers.filter((h) => !existingHeaders.includes(h));
-      if (missingHeaders.length > 0) {
-        await sheet.setHeaderRow(headers);
-      }
+      const totalQty = body.items.reduce((sum, i) => sum + i.quantity, 0);
 
       await sheet.addRow({
-        Fecha: new Date().toISOString(),
-        'Preference ID': body.preferenceId,
-        Estado: body.status,
-        Nombre: sanitizeSheetValue(body.name),
-        Teléfono: sanitizeSheetValue(body.phone),
+        ID: body.preferenceId,
+        'Fecha pedido': new Date().toISOString(),
+        'Nombre cliente': sanitizeSheetValue(body.name),
+        WhatsApp: sanitizeSheetValue(body.phone),
+        Producto: body.items.map((i) => `${sanitizeSheetValue(i.title)} x${i.quantity}`).join(', '),
+        Combo: '',
+        Cantidad: totalQty,
+        'Precio unit. ($)': '',
+        'Total ($)': `$${body.total.toLocaleString('es-AR')}`,
+        'Delivery ($)': '',
+        'Seña ($)': `$${body.total.toLocaleString('es-AR')}`,
+        'Saldo ($)': '$0',
+        Origen: 'Web',
+        'Método pago': 'Mercado Pago',
+        'Fecha entrega': body.deliveryDate || '',
         Dirección: sanitizeSheetValue(body.address),
-        Barrio: sanitizeSheetValue(body.barrio || ''),
-        Referencia: sanitizeSheetValue(body.reference || ''),
-        Productos: body.items.map((i) => `${sanitizeSheetValue(i.title)} x${i.quantity}`).join(', '),
-        Total: `$${body.total.toLocaleString('es-AR')}`,
+        'Zona/Barrio': sanitizeSheetValue(body.barrio || ''),
+        Estado: body.status,
         Notas: sanitizeSheetValue(body.notes || ''),
-        'Fecha de entrega': body.deliveryDate || '',
-        Horario: body.deliveryTime || '',
       });
       markProcessed(body.preferenceId);
     }

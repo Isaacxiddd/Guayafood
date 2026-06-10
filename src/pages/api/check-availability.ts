@@ -76,13 +76,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const rows = await sheet.getRows();
-    const dateCol = 'Fecha de entrega';
-    const timeCol = 'Horario';
+    const dateCol = 'Fecha entrega';
+    const timeCol = sheet.headerValues?.includes('Horario') ? 'Horario' : null;
 
-    const hasDateCol = sheet.headerValues?.includes(dateCol);
-    const hasTimeCol = sheet.headerValues?.includes(timeCol);
-
-    if (!hasDateCol || !hasTimeCol) {
+    if (!sheet.headerValues?.includes(dateCol)) {
       return new Response(JSON.stringify({ available: true, currentCount: 0, maxSlots: MAX_ORDERS_PER_SLOT }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -90,9 +87,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const count = rows.filter((r) => {
-      const rowDate = r.get(dateCol);
-      const rowTime = r.get(timeCol);
-      return rowDate === body.date && rowTime === body.time;
+      const matchDate = r.get(dateCol) === body.date;
+      if (!timeCol) return matchDate;
+      return matchDate && r.get(timeCol) === body.time;
     }).length;
 
     const available = count < MAX_ORDERS_PER_SLOT;
