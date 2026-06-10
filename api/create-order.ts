@@ -108,6 +108,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const result = await preference.create({
       body: {
         items: body.items.map((i) => ({
+          id: 'MP-ITEM',
           title: i.title,
           quantity: i.quantity,
           unit_price: i.unitPrice,

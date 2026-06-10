@@ -99,12 +99,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       body: {
         items: [
           ...body.items.map((i) => ({
+            id: 'MP-ITEM',
             title: i.title,
             quantity: i.quantity,
             unit_price: i.unitPrice,
             currency_id: 'ARS',
           })),
           {
+            id: 'MP-DELIVERY',
             title: 'Delivery programado',
             quantity: 1,
             unit_price: 0,

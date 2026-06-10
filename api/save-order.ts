@@ -1,11 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
 
-function getCredentials() {
+function getAuth() {
   const base64 = process.env.GOOGLE_CREDENTIALS_BASE64;
   if (!base64) return null;
   try {
-    return JSON.parse(Buffer.from(base64, 'base64').toString());
+    const creds = JSON.parse(Buffer.from(base64, 'base64').toString());
+    return new JWT({
+      email: creds.client_email,
+      key: creds.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
   } catch {
     return null;
   }
@@ -53,12 +59,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   try {
-    const creds = getCredentials();
+    const auth = getAuth();
     const sheetId = getSheetId();
 
-    if (creds && sheetId) {
-      const doc = new GoogleSpreadsheet(sheetId);
-      await doc.useServiceAccountAuth(creds);
+    if (auth && sheetId) {
+      const doc = new GoogleSpreadsheet(sheetId, auth);
       await doc.loadInfo();
 
       let sheet = doc.sheetsByTitle['Pedidos'];
