@@ -43,9 +43,12 @@ import Footer from '../components/Footer.astro';
     sessionStorage.removeItem('guayafood_order');
   }
 
+  let saveSuccess = false;
+  let savedData = null;
+
   async function saveOrder(data) {
     try {
-      await fetch('/api/save-order', {
+      const res = await fetch('/api/save-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -64,8 +67,18 @@ import Footer from '../components/Footer.astro';
           deliveryTime: data.deliveryTime || '',
         }),
       });
+      return res.ok;
     } catch (err) {
       console.error('Error saving order:', err);
+      return false;
+    }
+  }
+
+  async function trySave(data) {
+    savedData = data;
+    saveSuccess = await saveOrder(data);
+    if (saveSuccess) {
+      clearOrderData();
     }
   }
 
@@ -86,26 +99,33 @@ import Footer from '../components/Footer.astro';
     return text;
   }
 
-  function showBanner(type, data) {
+  function showBanner(type, data, opts = {}) {
     const div = document.getElementById('payment-status');
     div.classList.remove('hidden');
 
     if (type === 'approved') {
       const waText = data ? buildWaText(data) : 'Hola! Ya hice el pago por Mercado Pago';
       const waUrl = `https://wa.me/5491123861180?text=${encodeURIComponent(waText)}`;
+      const retryBtn = opts.saveFailed
+        ? `<button onclick="retrySave()" class="block mx-auto mt-2 text-xs bg-green-700 text-white px-4 py-2 rounded-full hover:bg-green-800 transition-colors">🔄 Reintentar guardar pedido</button>`
+        : '';
 
       div.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center';
       div.innerHTML = `
         <span class="text-3xl block mb-2">✅</span>
         <h3 class="font-bold text-lg mb-1">¡Pago recibido!</h3>
-        <p class="text-green-100 text-sm mb-3">Gracias por tu compra. Te llegará una notificación al negocio con tu pedido.</p>
+        <p class="text-green-100 text-sm mb-1">Gracias por tu compra.</p>
+        <p class="text-green-200 text-xs mb-3">${opts.saveFailed ? 'El pedido no se guardó automáticamente.' : 'Redirigiendo a WhatsApp para coordinar la entrega...'}</p>
         <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="inline-block bg-white text-green-700 font-bold px-6 py-3 rounded-full text-sm mb-2 hover:bg-green-50 transition-colors">
-          📲 Enviar comprobante por WhatsApp (opcional)
+          📲 Abrir WhatsApp ahora
         </a>
+        ${retryBtn}
         <button onclick="this.parentElement.remove()" class="block mx-auto mt-2 text-xs text-green-200 underline">Cerrar</button>
       `;
 
-      setTimeout(() => window.open(waUrl, '_blank'), 800);
+      if (!opts.saveFailed) {
+        setTimeout(() => { window.location.href = waUrl; }, 2500);
+      }
     } else if (type === 'failure') {
       div.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white px-6 py-4 rounded-2xl shadow-2xl max-w-md w-full mx-4 text-center';
       div.innerHTML = `
@@ -150,10 +170,9 @@ import Footer from '../components/Footer.astro';
       if (verified) {
         const data = getOrderData();
         if (data) {
-          saveOrder(data);
-          clearOrderData();
+          await trySave(data);
         }
-        showBanner('approved', data);
+        showBanner('approved', data, { saveFailed: data && !saveSuccess });
       } else {
         showBanner('failure');
       }
@@ -167,4 +186,15 @@ import Footer from '../components/Footer.astro';
     showBanner('pending');
     window.history.replaceState({}, '', '/');
   }
+
+  window.retrySave = async function () {
+    if (!savedData) return;
+    saveSuccess = await saveOrder(savedData);
+    if (saveSuccess) {
+      clearOrderData();
+      const div = document.getElementById('payment-status');
+      div.innerHTML = '<p class="text-green-100 text-sm">✅ Pedido guardado correctamente.</p>';
+      setTimeout(() => div.classList.add('hidden'), 3000);
+    }
+  };
 </script>
