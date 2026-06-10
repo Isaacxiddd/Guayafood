@@ -1,9 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import { checkRateLimit } from './lib/rate-limit';
 
 const MAX_ORDERS_PER_SLOT = parseInt(process.env.PUBLIC_MAX_ORDERS_PER_SLOT || '3', 10);
 const MAX_BODY_SIZE = 10_000;
+
+function getClientIp(req: IncomingMessage): string {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+}
 
 function getAuth() {
   const base64 = process.env.GOOGLE_CREDENTIALS_BASE64;
@@ -28,6 +33,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   if (req.method !== 'POST') {
     res.writeHead(405, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+
+  const ip = getClientIp(req);
+  const rate = checkRateLimit(ip);
+  if (!rate.allowed) {
+    res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil(rate.resetIn / 1000)) });
+    res.end(JSON.stringify({ error: 'Demasiadas solicitudes. Intentalo de nuevo en unos segundos.' }));
     return;
   }
 

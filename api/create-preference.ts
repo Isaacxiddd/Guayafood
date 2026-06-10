@@ -1,8 +1,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { checkRateLimit } from './lib/rate-limit';
 
 const MAX_BODY_SIZE = 100_000;
 const ADVANCE_HOURS = parseInt(process.env.PUBLIC_ADVANCE_HOURS || '24', 10);
 const WORKING_DAYS = [1, 2, 3, 4, 5, 6];
+
+function getClientIp(req: IncomingMessage): string {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+}
 
 function validateDeliveryDate(dateStr: string): string | null {
   if (!dateStr) return 'Falta la fecha de entrega.';
@@ -28,6 +33,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   if (req.method !== 'POST') {
     res.writeHead(405, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+
+  const ip = getClientIp(req);
+  const rate = checkRateLimit(ip);
+  if (!rate.allowed) {
+    res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil(rate.resetIn / 1000)) });
+    res.end(JSON.stringify({ error: 'Demasiadas solicitudes. Intentalo de nuevo en unos segundos.' }));
     return;
   }
 
