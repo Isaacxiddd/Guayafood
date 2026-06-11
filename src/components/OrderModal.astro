@@ -4,12 +4,13 @@ import { WHATSAPP, MERCADOPAGO, DELIVERY } from '../lib/config';
 interface Props {
   productName: string;
   productPrice: string;
-  unitPrice: number;
+  unitPrice?: number;
+  productId?: string;
   emoji?: string;
   description?: string;
 }
 
-const { productName, productPrice, unitPrice, emoji, description } = Astro.props;
+const { productName, productPrice, unitPrice, productId, emoji, description } = Astro.props;
 const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 ---
 
@@ -223,7 +224,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   const btnWaOrder = document.getElementById('btn-wa-order');
   const modalEmoji = document.querySelector('#order-modal-overlay .flex.items-center.gap-3 .text-3xl');
 
-  let currentData = { unitPrice: 0, name: '', price: '' };
+  let currentData = { productId: '', unitPrice: 0, name: '', price: '' };
   let quantity = 1;
   let lastCheckedSlot = '';
 
@@ -606,7 +607,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     const order = {
       name, phone, address, barrio, reference, notes,
       deliveryDate: date, deliveryTime: time,
-      items: [{ title: currentData.name, quantity, unitPrice: currentData.unitPrice }],
+      items: [{ productId: currentData.productId, quantity }],
       total,
     };
 

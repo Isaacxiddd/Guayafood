@@ -38,6 +38,14 @@ import Footer from '../components/Footer.astro';
     if (!d) return null;
     try {
       const raw = JSON.parse(atob(d.replace(/-/g, '+').replace(/_/g, '/')));
+      const CATALOG = {
+        empanaditas: { name: 'Empanaditas venezolanas', unitPrice: 1500 },
+        tequenos: { name: 'Tequeños irresistibles', unitPrice: 1000 },
+        pastelitos: { name: 'Pastelitos andinos', unitPrice: 1800 },
+        'combo-a': { name: 'Combo A', unitPrice: 10000 },
+        'combo-b': { name: 'Combo B', unitPrice: 14500 },
+        'combo-c': { name: 'Combo C', unitPrice: 18000 },
+      };
       return {
         name: raw.n,
         phone: raw.p,
@@ -48,8 +56,9 @@ import Footer from '../components/Footer.astro';
         deliveryDate: raw.dd || '',
         deliveryTime: raw.dt || '',
         items: raw.i ? raw.i.split(',').map((s) => {
-          const [title, quantity, unitPrice] = s.split('|');
-          return { title, quantity: parseInt(quantity), unitPrice: parseInt(unitPrice) };
+          const [productId, quantity] = s.split('|');
+          const product = CATALOG[productId] || { name: productId, unitPrice: 0 };
+          return { title: product.name, quantity: parseInt(quantity), unitPrice: product.unitPrice };
         }) : [],
         total: raw.t || 0,
       };

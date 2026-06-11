@@ -3,6 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { getClientIp, checkRateLimit, checkOrigin } from '../../lib/rate-limit';
 import { checkProcessed, markProcessed } from '../../lib/idempotency';
+import { PRODUCT_CATALOG } from '../../lib/config';
 
 export const prerender = false;
 
@@ -56,7 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
     address: string;
     barrio?: string;
     reference?: string;
-    items: { title: string; quantity: number }[];
+    items: { title?: string; productId?: string; quantity: number }[];
     total: number;
     notes?: string;
     deliveryDate?: string;
@@ -110,12 +111,17 @@ export const POST: APIRoute = async ({ request }) => {
 
       const totalQty = body.items.reduce((sum, i) => sum + i.quantity, 0);
 
+      const resolveItem = (i: { title?: string; productId?: string; quantity: number }): string => {
+        const name = i.title || (i.productId ? PRODUCT_CATALOG.get(i.productId)?.name || i.productId : '?');
+        return `${sanitizeSheetValue(name)} x${i.quantity}`;
+      };
+
       await sheet.addRow({
         ID: body.preferenceId,
         'Fecha pedido': new Date().toISOString(),
         'Nombre cliente': sanitizeSheetValue(body.name),
         WhatsApp: sanitizeSheetValue(body.phone),
-        Producto: body.items.map((i) => `${sanitizeSheetValue(i.title)} x${i.quantity}`).join(', '),
+        Producto: body.items.map(resolveItem).join(', '),
         Combo: '',
         Cantidad: totalQty,
         'Precio unit. ($)': '',

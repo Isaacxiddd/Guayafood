@@ -61,6 +61,7 @@ export const PRODUCTOS_SECTION = {
   description: 'Cada bocado te transporta a una cocina venezolana. Productos caseros, preparados en el día.',
   items: [
     {
+      id: 'empanaditas',
       name: 'Empanaditas venezolanas',
       description: 'Rellenas del sabor que nos representa. Carne mechada, carne molida, pollo, queso, jamón y queso, mondongo, salchicha, salchipollo.',
       price: '$1.500 c/u',
@@ -69,6 +70,7 @@ export const PRODUCTOS_SECTION = {
       image: '/empanadas.jpeg',
     },
     {
+      id: 'tequenos',
       name: 'Tequeños irresistibles',
       description: 'Crujientes por fuera, queso derretido por dentro. El clásico que nunca falla en ninguna reunión.',
       price: '$1.000 c/u',
@@ -76,6 +78,7 @@ export const PRODUCTOS_SECTION = {
       emoji: '🧀',
     },
     {
+      id: 'pastelitos',
       name: 'Pastelitos andinos',
       description: 'Crujientes por fuera, deliciosos por dentro. Rellenos de carne, pollo o queso. Un bocado que enamora.',
       price: '$1.800 c/u',
@@ -91,11 +94,19 @@ export const COMBOS_SECTION = {
   title: 'Perfectos para compartir',
   description: 'Ideal para reuniones, cumpleaños, eventos y más. Delivery con costo adicional.',
   items: [
-    { id: 'A', name: 'Combo A', pieces: '10 piezas', salsas: '1 salsa a elección', price: '$10.000', unitPrice: 10000, popular: false },
-    { id: 'B', name: 'Combo B', pieces: '15 piezas', salsas: '1 salsa a elección', price: '$14.500', unitPrice: 14500, popular: true },
-    { id: 'C', name: 'Combo C', pieces: '20 piezas', salsas: '2 salsas a elección', price: '$18.000', unitPrice: 18000, popular: false },
+    { id: 'combo-a', name: 'Combo A', pieces: '10 piezas', salsas: '1 salsa a elección', price: '$10.000', unitPrice: 10000, popular: false },
+    { id: 'combo-b', name: 'Combo B', pieces: '15 piezas', salsas: '1 salsa a elección', price: '$14.500', unitPrice: 14500, popular: true },
+    { id: 'combo-c', name: 'Combo C', pieces: '20 piezas', salsas: '2 salsas a elección', price: '$18.000', unitPrice: 18000, popular: false },
   ],
 };
+
+export const PRODUCT_CATALOG = new Map<string, { name: string; unitPrice: number; description?: string }>();
+for (const p of PRODUCTOS_SECTION.items) {
+  PRODUCT_CATALOG.set(p.id, { name: p.name, unitPrice: p.unitPrice, description: p.description });
+}
+for (const c of COMBOS_SECTION.items) {
+  PRODUCT_CATALOG.set(c.id, { name: c.name, unitPrice: c.unitPrice });
+}
 
 export const GALERIA = {
   badge: 'Galería',

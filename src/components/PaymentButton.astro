@@ -2,21 +2,23 @@
 import { MERCADOPAGO } from '../lib/config';
 
 interface Props {
+  productId: string;
   productName: string;
   productPrice: string;
-  unitPrice: number;
+  unitPrice?: number;
   emoji?: string;
   description?: string;
 }
 
-const { productName, productPrice, unitPrice, emoji, description } = Astro.props;
+const { productId, productName, productPrice, unitPrice, emoji, description } = Astro.props;
 ---
 
 <button
   class="mp-open-btn inline-flex items-center justify-center gap-2 bg-[#00BFFF] hover:bg-[#009ACD] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg w-full"
+  data-product-id={productId}
   data-name={productName}
   data-price={productPrice}
-  data-unit-price={unitPrice}
+  data-unit-price={unitPrice ?? 0}
   data-emoji={emoji || ''}
   data-desc={description || ''}
 >
@@ -29,6 +31,7 @@ const { productName, productPrice, unitPrice, emoji, description } = Astro.props
     btn.addEventListener('click', () => {
       if (typeof window.openOrderModal === 'function') {
         window.openOrderModal({
+          productId: btn.getAttribute('data-product-id'),
           name: btn.getAttribute('data-name'),
           price: btn.getAttribute('data-price'),
           unitPrice: Number(btn.getAttribute('data-unit-price')),

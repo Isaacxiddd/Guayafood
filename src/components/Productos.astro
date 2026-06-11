@@ -43,6 +43,7 @@ const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
                 Pedir por WhatsApp →
               </a>
               <PaymentButton
+                productId={p.id}
                 productName={p.name}
                 productPrice={p.price}
                 unitPrice={p.unitPrice}

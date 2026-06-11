@@ -1,14 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getClientIp, checkRateLimit, checkOrigin } from '../../lib/rate-limit';
-import { PRODUCTOS_SECTION, COMBOS_SECTION } from '../../lib/config';
-
-const PRICE_MAP = new Map<string, number>();
-for (const p of PRODUCTOS_SECTION.items) {
-  PRICE_MAP.set(p.name.toLowerCase().trim(), p.unitPrice);
-}
-for (const c of COMBOS_SECTION.items) {
-  PRICE_MAP.set(c.name.toLowerCase().trim(), c.unitPrice);
-}
+import { PRODUCT_CATALOG } from '../../lib/config';
 
 export const prerender = false;
 
@@ -64,7 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
   const siteUrl = process.env.PUBLIC_SITE_URL || 'https://guayafood.vercel.app';
 
   let body: {
-    items: { title: string; quantity: number; unitPrice: number }[];
+    items: { productId: string; quantity: number }[];
     customer: { name: string; phone: string; address: string; barrio?: string };
     notes?: string;
     deliveryDate?: string;
@@ -89,16 +81,9 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   for (const item of body.items) {
-    const key = item.title.toLowerCase().trim();
-    const expected = PRICE_MAP.get(key);
-    if (expected === undefined) {
-      return new Response(JSON.stringify({ error: `Producto no válido: ${item.title}` }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    if (item.unitPrice !== expected) {
-      return new Response(JSON.stringify({ error: `Precio inválido para: ${item.title}` }), {
+    const product = PRODUCT_CATALOG.get(item.productId);
+    if (!product) {
+      return new Response(JSON.stringify({ error: `Producto no válido: ${item.productId}` }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -175,7 +160,15 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const total = body.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+    const resolvedItems = body.items.map((item) => {
+      const product = PRODUCT_CATALOG.get(item.productId)!;
+      return {
+        title: product.name,
+        quantity: item.quantity,
+        unitPrice: product.unitPrice,
+      };
+    });
+    const total = resolvedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
     const orderData = {
       n: body.customer.name,
       p: body.customer.phone,
@@ -185,7 +178,7 @@ export const POST: APIRoute = async ({ request }) => {
       no: body.notes || '',
       dd: body.deliveryDate || '',
       dt: body.deliveryTime || '',
-      i: body.items.map((i) => `${i.title}|${i.quantity}|${i.unitPrice}`).join(','),
+      i: body.items.map((item) => `${item.productId}|${item.quantity}`).join(','),
       t: total,
     };
     const encodedData = Buffer.from(JSON.stringify(orderData))
@@ -196,7 +189,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const payload = {
       items: [
-        ...body.items.map((i) => ({
+        ...resolvedItems.map((i) => ({
           id: 'MP-ITEM',
           title: i.title,
           quantity: i.quantity,

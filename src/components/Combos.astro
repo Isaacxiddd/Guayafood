@@ -6,7 +6,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.combos);
 const { badge, title, description, items } = COMBOS_SECTION;
 ---
 
-<OrderModal productName="" productPrice="" unitPrice={0} />
+<OrderModal productName="" productPrice="" />
 
 <section id="combos" class="py-20 md:py-28 px-4 bg-white">
   <div class="max-w-6xl mx-auto">
@@ -59,9 +59,9 @@ const { badge, title, description, items } = COMBOS_SECTION;
                 Pedir {c.name} por WhatsApp
               </a>
               <PaymentButton
+                productId={c.id}
                 productName={c.name}
                 productPrice={c.price}
-                unitPrice={c.unitPrice}
                 description={`${c.pieces} - ${c.salsas}`}
               />
             </div>
