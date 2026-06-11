@@ -23,8 +23,11 @@ const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
     <div class="grid md:grid-cols-3 gap-6 md:gap-8">
       {items.map((p) => (
         <div class="bg-white rounded-2xl border border-crema-dark overflow-hidden hover:shadow-xl transition-shadow group">
-          <div class="aspect-[4/3] bg-gradient-to-br from-vinotinto/5 to-oro/5 flex items-center justify-center">
-            <span class="text-6xl group-hover:scale-110 transition-transform duration-300">{p.emoji}</span>
+          <div class="aspect-[4/3] bg-gradient-to-br from-vinotinto/5 to-oro/5 flex items-center justify-center overflow-hidden">
+            {p.image
+              ? <img src={p.image} alt={p.name} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              : <span class="text-6xl group-hover:scale-110 transition-transform duration-300">{p.emoji}</span>
+            }
           </div>
           <div class="p-6 md:p-8">
             <h3 class="font-heading text-xl font-bold text-texto mb-2">{p.name}</h3>

@@ -66,6 +66,7 @@ export const PRODUCTOS_SECTION = {
       price: '$1.500 c/u',
       unitPrice: 1500,
       emoji: '🥟',
+      image: '/empanadas.jpeg',
     },
     {
       name: 'Tequeños irresistibles',
@@ -101,7 +102,7 @@ export const GALERIA = {
   title: 'Hecho en casa, con amor',
   description: 'Pronto: fotos reales de nuestros productos. Por ahora, dejá volar la imaginación…',
   items: [
-    { emoji: '🥟', label: 'Empanaditas', color: 'from-vinotinto/10 to-oro/10' },
+    { emoji: '🥟', label: 'Empanaditas', image: '/empanadas.jpeg', color: 'from-vinotinto/10 to-oro/10' },
     { emoji: '🧀', label: 'Tequeños', color: 'from-oro/10 to-vinotinto/10' },
     { emoji: '🥟', label: 'Pastelitos', color: 'from-azul/10 to-vinotinto/10' },
     { emoji: '🥗', label: 'Salsas', color: 'from-vinotinto/10 to-azul/10' },

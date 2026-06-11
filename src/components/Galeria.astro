@@ -18,7 +18,10 @@ const { badge, title, description, items, cta } = GALERIA;
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
       {items.map((f) => (
         <div class={`aspect-square rounded-xl bg-gradient-to-br ${f.color} flex flex-col items-center justify-center gap-3 border border-crema-dark hover:shadow-lg transition-all group cursor-pointer`}>
-          <span class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">{f.emoji}</span>
+          {f.image
+            ? <img src={f.image} alt={f.label} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+            : <span class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">{f.emoji}</span>
+          }
           <span class="text-sm font-medium text-texto-light">{f.label}</span>
         </div>
       ))}
