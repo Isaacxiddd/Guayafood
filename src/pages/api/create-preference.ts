@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getClientIp, checkRateLimit } from '../../lib/rate-limit';
+import { getClientIp, checkRateLimit, checkOrigin } from '../../lib/rate-limit';
 import { PRODUCTOS_SECTION, COMBOS_SECTION } from '../../lib/config';
 
 const PRICE_MAP = new Map<string, number>();
@@ -37,6 +37,13 @@ function validateDeliveryTime(timeStr: string): string | null {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!checkOrigin(request)) {
+    return new Response(JSON.stringify({ error: 'Origen no permitido' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const ip = getClientIp(request);
   const rate = checkRateLimit(ip);
   if (!rate.allowed) {

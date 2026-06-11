@@ -1,8 +1,16 @@
 import type { APIRoute } from 'astro';
+import { checkOrigin } from '../../lib/rate-limit';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!checkOrigin(request)) {
+    return new Response(JSON.stringify({ error: 'Origen no permitido' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   let body: { payment_id?: string };
 
   try {

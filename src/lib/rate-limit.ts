@@ -7,6 +7,17 @@ export function getClientIp(request: Request): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 }
 
+const ALLOWED_ORIGINS = new Set([
+  process.env.PUBLIC_SITE_URL || 'https://guayafood.vercel.app',
+  'https://guayafood.vercel.app',
+]);
+
+export function checkOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  if (!origin) return false;
+  return ALLOWED_ORIGINS.has(origin.replace(/\/$/, ''));
+}
+
 export function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
   const now = Date.now();
   const entry = ipHits.get(ip);

@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import { getClientIp, checkRateLimit } from '../../lib/rate-limit';
+import { getClientIp, checkRateLimit, checkOrigin } from '../../lib/rate-limit';
 
 export const prerender = false;
 
@@ -27,6 +27,13 @@ function getSheetId() {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!checkOrigin(request)) {
+    return new Response(JSON.stringify({ error: 'Origen no permitido' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const ip = getClientIp(request);
   const rate = checkRateLimit(ip);
   if (!rate.allowed) {
