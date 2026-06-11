@@ -60,8 +60,8 @@ Usuario → OrderModal → /api/create-preference → MP Checkout Pro
 **Keywords eliminadas:** `'buenos aires'` se sacó de TODAS las listas porque matchea tanto CABA como provincia de Buenos Aires (ej: "Biarritz, Buenos Aires" es provincia).
 
 ### Mercado Pago
-- **Access Token:** `REDACTED`
-- **Webhook Secret:** `REDACTED`
+- **Access Token:** `REDACTED — revocado`
+- **Webhook Secret:** `REDACTED — revocado`
 - `notification_url` apunta a `/api/mercadopago-webhook`
 - Timeout de 8s con `AbortController` en todas las llamadas a APIs de MP
 - `verify-payment.ts` es el endpoint principal de verificación (llamado desde index.astro post-redirect)
