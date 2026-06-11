@@ -169,23 +169,6 @@ export const POST: APIRoute = async ({ request }) => {
       };
     });
     const total = resolvedItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-    const orderData = {
-      n: body.customer.name,
-      p: body.customer.phone,
-      a: body.customer.address,
-      b: body.customer.barrio || '',
-      r: body.reference || '',
-      no: body.notes || '',
-      dd: body.deliveryDate || '',
-      dt: body.deliveryTime || '',
-      i: body.items.map((item) => `${item.productId}|${item.quantity}`).join(','),
-      t: total,
-    };
-    const encodedData = Buffer.from(JSON.stringify(orderData))
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
 
     const payload = {
       items: [
@@ -201,8 +184,20 @@ export const POST: APIRoute = async ({ request }) => {
         name: body.customer.name,
         phone: { number: body.customer.phone },
       },
+      metadata: {
+        customer_name: body.customer.name,
+        customer_phone: body.customer.phone,
+        customer_address: body.customer.address,
+        customer_barrio: body.customer.barrio || '',
+        customer_reference: body.reference || '',
+        notes: body.notes || '',
+        delivery_date: body.deliveryDate || '',
+        delivery_time: body.deliveryTime || '',
+        items: body.items.map((item) => `${item.productId}|${item.quantity}`).join(','),
+        total,
+      },
       back_urls: {
-        success: `${siteUrl}/?status=approved&d=${encodedData}`,
+        success: `${siteUrl}/?status=approved`,
         failure: `${siteUrl}/?status=failure`,
         pending: `${siteUrl}/?status=pending`,
       },

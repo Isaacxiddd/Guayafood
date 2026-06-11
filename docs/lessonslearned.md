@@ -64,3 +64,38 @@ Validación explícita del header Origin.
 
 ### Aprendizaje
 No asumir que una API solo será consumida por el frontend oficial.
+
+## 5. PII en parámetros de URL (back_url de Mercado Pago)
+
+### Problema
+Al crear la preferencia de pago, los datos del cliente (nombre, teléfono, dirección, fecha y horario de entrega, productos) se serializaban como JSON, se codificaban en base64 y se incluían como parámetro `d` en la `back_url` de éxito:
+
+```
+https://guayafood.vercel.app/?status=approved&d=eyJuIjoiSnVhbi4uLiJ9...
+```
+
+### Riesgo
+Base64 no es cifrado: cualquiera con acceso a los logs puede decodificarlo con `atob()`. La URL completa queda expuesta en:
+- Logs de acceso del servidor y del CDN (Vercel)
+- Logs de Mercado Pago (la URL es enviada a su API al crear la preferencia)
+- El header `Referer` enviado a cualquier recurso de terceros cargado en la página de éxito (analytics, fuentes, CDN de imágenes)
+
+### Cómo se detectó
+Auditoría de seguridad del código fuente: se identificó que la `back_url` contenía un parámetro con datos PII codificados en base64 en lugar de cifrados.
+
+### Solución
+Los datos del pedido se mueven al campo `metadata` de la preferencia de Mercado Pago (almacenado server-side en MP). La `back_url` de éxito queda limpia:
+
+```
+https://guayafood.vercel.app/?status=approved
+```
+
+En la página de éxito, el frontend llama a `/api/verify-payment` pasando el `payment_id` y el `preference_id` que MP incluye en la redirección. El endpoint consulta `GET /checkout/preferences/{id}` en la API de MP y devuelve el `metadata` con los datos del pedido. El PII nunca aparece en ninguna URL.
+
+### Archivos modificados
+- `src/pages/api/create-preference.ts` — datos movidos a `metadata`, removido `encodedData` y param `d`
+- `src/pages/api/verify-payment.ts` — acepta `preference_id`, consulta preferencia y devuelve `orderData`
+- `src/pages/index.astro` — usa `orderData` del API response, eliminada función `getDataFromUrl()`
+
+### Aprendizaje
+Un parámetro URL con base64 parece "seguro" visualmente pero es texto plano. Cualquier dato sensible del usuario que deba sobrevivir un redirect debe vivir en el servidor, no en la URL.

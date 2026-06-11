@@ -22,10 +22,20 @@ const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
 
     <div class="grid md:grid-cols-3 gap-6 md:gap-8">
       {items.map((p) => (
-        <div class="bg-white rounded-2xl border border-crema-dark overflow-hidden hover:shadow-xl transition-shadow group">
-          <div class="aspect-[4/3] bg-gradient-to-br from-vinotinto/5 to-oro/5 flex items-center justify-center overflow-hidden">
+        <div
+          class="bg-white rounded-2xl border border-crema-dark overflow-hidden hover:shadow-xl transition-shadow group"
+          data-product={p.id}
+        >
+          <div class="aspect-[4/3] bg-gradient-to-br from-vinotinto/5 to-oro/5 relative flex items-center justify-center overflow-hidden">
             {p.image
-              ? <img src={p.image} alt={p.name} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              ? <>
+                  <img src={p.image} alt={p.name} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 product-img" />
+                  {p.id === 'empanaditas' && (
+                    <video muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 product-video">
+                      <source src="/videos/empanadas-close.mp4" type="video/mp4" />
+                    </video>
+                  )}
+                </>
               : <span class="text-6xl group-hover:scale-110 transition-transform duration-300">{p.emoji}</span>
             }
           </div>
@@ -63,3 +73,24 @@ const { badge, title, description, items, extras } = PRODUCTOS_SECTION;
     </div>
   </div>
 </section>
+
+<script>
+  document.querySelectorAll('[data-product="empanaditas"]').forEach((card) => {
+    const video = card.querySelector('.product-video');
+    const img = card.querySelector('.product-img');
+    if (!video) return;
+
+    card.addEventListener('mouseenter', () => {
+      img?.classList.add('opacity-0');
+      video.classList.remove('opacity-0');
+      video.currentTime = 0;
+      video.play();
+    });
+
+    card.addEventListener('mouseleave', () => {
+      video.classList.add('opacity-0');
+      video.pause();
+      img?.classList.remove('opacity-0');
+    });
+  });
+</script>

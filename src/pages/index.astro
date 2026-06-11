@@ -33,44 +33,12 @@ import Footer from '../components/Footer.astro';
     sessionStorage.removeItem('guayafood_order');
   }
 
-  function getDataFromUrl() {
-    const d = params.get('d');
-    if (!d) return null;
-    try {
-      const raw = JSON.parse(atob(d.replace(/-/g, '+').replace(/_/g, '/')));
-      const CATALOG = {
-        empanaditas: { name: 'Empanaditas venezolanas', unitPrice: 1500 },
-        tequenos: { name: 'Tequeños irresistibles', unitPrice: 1000 },
-        pastelitos: { name: 'Pastelitos andinos', unitPrice: 1800 },
-        'combo-a': { name: 'Combo A', unitPrice: 10000 },
-        'combo-b': { name: 'Combo B', unitPrice: 14500 },
-        'combo-c': { name: 'Combo C', unitPrice: 18000 },
-      };
-      return {
-        name: raw.n,
-        phone: raw.p,
-        address: raw.a,
-        barrio: raw.b || '',
-        reference: raw.r || '',
-        notes: raw.no || '',
-        deliveryDate: raw.dd || '',
-        deliveryTime: raw.dt || '',
-        items: raw.i ? raw.i.split(',').map((s) => {
-          const [productId, quantity] = s.split('|');
-          const product = CATALOG[productId] || { name: productId, unitPrice: 0 };
-          return { title: product.name, quantity: parseInt(quantity), unitPrice: product.unitPrice };
-        }) : [],
-        total: raw.t || 0,
-      };
-    } catch { return null; }
-  }
-
   function getOrderData() {
     const raw = sessionStorage.getItem('guayafood_order');
     if (raw) {
       try { return JSON.parse(raw); } catch { /* fall through */ }
     }
-    return getDataFromUrl();
+    return null;
   }
 
   function clearOrderData() {
@@ -188,21 +156,23 @@ import Footer from '../components/Footer.astro';
   if (status === 'approved') {
     (async () => {
       let verified = !paymentId;
+      let apiOrderData = null;
       if (paymentId) {
         try {
           const res = await fetch('/api/verify-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payment_id: paymentId }),
+            body: JSON.stringify({ payment_id: paymentId, preference_id: preferenceId }),
           });
           const data = await res.json();
           verified = data.verified === true;
+          apiOrderData = data.orderData || null;
         } catch {
           verified = false;
         }
       }
       if (verified) {
-        const data = getOrderData();
+        const data = apiOrderData || getOrderData();
         if (data) {
           await trySave(data);
         }

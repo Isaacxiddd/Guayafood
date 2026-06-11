@@ -39,7 +39,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
         <label class="block text-sm font-semibold text-texto mb-2">Cantidad</label>
         <div class="flex items-center gap-3">
           <button id="qty-minus" class="w-10 h-10 rounded-full border border-crema-dark flex items-center justify-center text-lg font-bold text-texto hover:bg-crema transition-colors">−</button>
-          <span id="qty-value" class="text-2xl font-bold text-texto w-10 text-center">1</span>
+          <span id="qty-value" class="text-2xl font-bold text-texto w-14 text-center">10</span>
           <button id="qty-plus" class="w-10 h-10 rounded-full border border-crema-dark flex items-center justify-center text-lg font-bold text-texto hover:bg-crema transition-colors">+</button>
         </div>
       </div>
@@ -225,7 +225,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   const modalEmoji = document.querySelector('#order-modal-overlay .flex.items-center.gap-3 .text-3xl');
 
   let currentData = { productId: '', unitPrice: 0, name: '', price: '' };
-  let quantity = 1;
+  let quantity = 10;
   let lastCheckedSlot = '';
 
   function parsePriceToNumber(priceStr) {
@@ -309,12 +309,12 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 
   function openModal(data) {
     currentData = data;
-    quantity = 1;
-    qtyValue.textContent = '1';
+    quantity = 10;
+    qtyValue.textContent = '10';
     if (modalEmoji) modalEmoji.textContent = data.emoji || '';
     modalTitle.textContent = data.name;
     modalPrice.textContent = data.price;
-    modalSubtotal.textContent = data.price;
+    updateSubtotal();
     fieldName.value = '';
     fieldPhone.value = '';
     fieldAddress.value = '';
@@ -353,8 +353,8 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   });
 
   qtyMinus.addEventListener('click', () => {
-    if (quantity > 1) {
-      quantity--;
+    if (quantity > 10) {
+      quantity -= 5;
       qtyValue.textContent = quantity;
       updateSubtotal();
     }
@@ -362,7 +362,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 
   qtyPlus.addEventListener('click', () => {
     if (quantity < 100) {
-      quantity++;
+      quantity += 5;
       qtyValue.textContent = quantity;
       updateSubtotal();
     }
