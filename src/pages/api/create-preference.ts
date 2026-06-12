@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getClientIp, checkRateLimit, checkOrigin } from '../../lib/rate-limit';
 import { PRODUCT_CATALOG } from '../../lib/config';
+import { validateCabaAddress } from '../../lib/address';
 
 export const prerender = false;
 
@@ -90,49 +91,15 @@ export const POST: APIRoute = async ({ request }) => {
     }
   }
 
-  const addr = body.customer.address.toLowerCase();
-  const barrio = (body.customer.barrio || '').toLowerCase().trim();
-  const cabaKeywords = [
-    'capital federal', 'caba', 'ciudad autonoma de buenos aires',
-    'agronomía', 'almagro', 'balvanera', 'barracas', 'belgrano', 'boedo',
-    'caballito', 'chacarita', 'colegiales', 'constitución', 'flores', 'floresta',
-    'la boca', 'la paternal', 'liniers', 'mataderos', 'monte castro', 'montserrat',
-    'nueva pompeya', 'nuñez', 'palermo', 'parque avellaneda', 'parque chacabuco',
-    'parque patricios', 'puerto madero', 'recoleta', 'retiro', 'saavedra',
-    'san cristóbal', 'san nicolás', 'san telmo', 'versalles', 'villa crespo',
-    'villa del parque', 'villa devoto', 'villa general mitre', 'villa lugano',
-    'villa luro', 'villa ortúzar', 'villa pueyrredón', 'villa real',
-    'villa riachuelo', 'villa santa rita', 'villa soldati', 'villa urquiza',
-    'villa de mayo', 'coghlan', 'palermo viejo', 'palermo soho', 'palermo hollywood',
-    'las cañitas', 'abasto', 'once', 'congreso', 'tribunales', 'microcentro',
-    'barrio norte', 'barrio sur',
-  ];
+  const addr = body.customer.address;
+  const barrio = body.customer.barrio || '';
+  const addressValidation = await validateCabaAddress(addr, barrio);
 
-  let addressValid = false;
-
-  if (barrio && barrio !== 'otro') {
-    const known = [...cabaKeywords, 'constitucion'];
-    if (known.includes(barrio)) addressValid = true;
-  }
-
-  if (!addressValid) {
-    const cpMatch = addr.match(/\bc(\d{4})\b/);
-    if (cpMatch) {
-      const cpNum = parseInt(cpMatch[1], 10);
-      if (cpNum >= 1000 && cpNum <= 1999) {
-        addressValid = true;
-      } else {
-        return new Response(JSON.stringify({ error: 'El código postal no corresponde a CABA. Solo entregamos en Capital Federal.' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    } else if (!cabaKeywords.some((k) => addr.includes(k))) {
-      return new Response(JSON.stringify({ error: 'No pudimos verificar que la dirección sea de CABA. Incluí el código postal (ej: C1425).' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  if (!addressValidation.isCaba) {
+    return new Response(JSON.stringify({ error: addressValidation.error || 'La dirección no corresponde a CABA. Solo entregamos en Capital Federal.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const phoneDigits = (body.customer.phone || '').replace(/\D/g, '');

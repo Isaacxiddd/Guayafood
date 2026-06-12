@@ -10,6 +10,9 @@ export function getClientIp(request: Request): string {
 const ALLOWED_ORIGINS = new Set([
   process.env.PUBLIC_SITE_URL || 'https://guayafood.vercel.app',
   'https://guayafood.vercel.app',
+  ...(process.env.NODE_ENV === 'development'
+    ? ['http://localhost:4321', 'http://localhost:3000', 'http://localhost:4322']
+    : []),
 ]);
 
 export function checkOrigin(request: Request): boolean {

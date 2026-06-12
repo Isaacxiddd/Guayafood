@@ -99,3 +99,44 @@ En la página de éxito, el frontend llama a `/api/verify-payment` pasando el `p
 
 ### Aprendizaje
 Un parámetro URL con base64 parece "seguro" visualmente pero es texto plano. Cualquier dato sensible del usuario que deba sobrevivir un redirect debe vivir en el servidor, no en la URL.
+
+## 6. Precios del lado del servidor (Server-side Price Resolution)
+
+### Problema
+El frontend enviaba `unitPrice` al backend, permitiendo manipulación desde DevTools.
+
+### Riesgo
+Un usuario podía modificar el precio desde la consola del navegador y pagar menos.
+
+### Solución
+El frontend solo envía `productId` + `quantity`. El servidor resuelve el precio contra `PRODUCT_CATALOG` (fuente de verdad):
+```
+Frontend → { productId: "combo-b", quantity: 2 }
+Servidor → lookup unitPrice = 14500 → total = 29000
+```
+El navegador nunca toca valores económicos reales; solo muestra el precio calculado. Una inyección en console solo puede cambiar lo que ve el usuario, no lo que se cobra.
+
+### Aprendizaje
+Cualquier valor económico debe resolverse exclusivamente del lado del servidor contra una fuente de verdad. El frontend es un cliente no confiable.
+
+## 7. Validación CABA por barrio explícito (Trust on barrio selection)
+
+### Problema
+Validar direcciones con APIs de georreferenciación (Georef, Nominatim) daba falsos negativos: direcciones CABA reales como "Saraza 400" eran rechazadas porque la API no las reconocía, mientras que direcciones de provincia como "Av. Hipólito Yrigoyen 8775" pasaban sin barrio.
+
+### Riesgo
+Clientes válidos frustrados por rechazos incorrectos, o direcciones de provincia aceptadas por error.
+
+### Solución
+Se cambió a un modelo de confianza basado en barrio explícito:
+- El frontend tiene un **selector obligatorio** de barrio (~50 barrios porteños + "Otro")
+- El backend confía en la selección del usuario
+- "Otro" = el usuario afirma estar en CABA → se acepta
+- Barrio conocido → se acepta automático
+- Solo se rechazan barrios que explícitamente no son CABA (ej: "La Matanza")
+
+### Por qué funciona
+El usuario sabe en qué barrio vive. No necesitamos una API de georreferenciación para confirmarlo. El fraude potencial (alguien de provincia seleccionando "Palermo") es irrelevante porque el delivery se coordina por WhatsApp y el repartidor verificará la dirección antes de entregar.
+
+### Aprendizaje
+No toda validación necesita ser técnica. Cuando el usuario tiene más información que el sistema, delegar en él es más preciso que una API externa con falsos positivos/negativos.

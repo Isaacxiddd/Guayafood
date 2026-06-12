@@ -39,7 +39,7 @@ export const HERO = {
   badge: 'COCINA VENEZOLANA EN BUENOS AIRES',
   heading: 'Desde mi cocina,',
   headingHighlight: 'para tu corazón',
-  description: 'Empanaditas, tequeños y pastelitos andinos hechos con la receta tradicional de una mamá venezolana. Todo casero, todo con cariño.',
+  description: 'Empanaditas, tequeños y pastelitos hechos con la receta tradicional de una mamá venezolana. Todo casero, todo con cariño.',
   cta: 'Hacé tu pedido',
   secondaryCta: 'Ver productos',
 };
@@ -79,7 +79,7 @@ export const PRODUCTOS_SECTION = {
     },
     {
       id: 'pastelitos',
-      name: 'Pastelitos andinos',
+      name: 'Pastelitos ',
       description: 'Crujientes por fuera, deliciosos por dentro. Rellenos de carne, pollo o queso. Un bocado que enamora.',
       price: '$1.800 c/u',
       unitPrice: 1800,

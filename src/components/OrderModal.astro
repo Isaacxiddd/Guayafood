@@ -137,6 +137,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
             <option value="constitucion">Constitución</option>
             <option value="otro">Otro</option>
           </select>
+          <p id="barrio-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
         <div>
           <label class="block text-sm font-semibold text-texto mb-1">Fecha de entrega <span class="text-xs text-vinotinto">(pedí con anticipación)</span></label>
@@ -178,9 +179,6 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Mandar pedido por WhatsApp
         </button>
-        <button id="btn-test-data" class="w-full text-center text-xs text-azul/50 hover:text-azul transition-colors mt-1 py-1">
-          🧪 Completar datos de prueba
-        </button>
       </div>
     </div>
   </div>
@@ -211,6 +209,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   const fieldBarrio = document.getElementById('field-barrio');
   const phoneError = document.getElementById('phone-error');
   const addressError = document.getElementById('address-error');
+  const barrioError = document.getElementById('barrio-error');
   const fieldDate = document.getElementById('field-date');
   const dateError = document.getElementById('date-error');
   const fieldTime = document.getElementById('field-time');
@@ -242,11 +241,8 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   let addressChecking = false;
 
   function isCapitalFederalClient(address) {
-    const barrio = fieldBarrio ? fieldBarrio.value : '';
-    if (barrio && barrio !== 'otro') return true;
+    // Solo shortcircuit por CP — el barrio se valida contra Georef en el servidor
     const lower = (address || '').toLowerCase();
-    const keywords = ['capital federal', 'caba', 'ciudad autonoma de buenos aires'];
-    if (keywords.some((kw) => lower.includes(kw))) return true;
     const cpMatch = lower.match(/\bc\d{4}\b/);
     if (cpMatch) {
       const num = parseInt(cpMatch[0].slice(1), 10);
@@ -302,6 +298,10 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     return now.toISOString().slice(0, 10);
   }
 
+  function isCombo() {
+    return currentData.productId && currentData.productId.startsWith('combo-');
+  }
+
   function updateSubtotal() {
     const total = currentData.unitPrice * quantity;
     modalSubtotal.textContent = formatPrice(total);
@@ -309,8 +309,8 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 
   function openModal(data) {
     currentData = data;
-    quantity = 10;
-    qtyValue.textContent = '10';
+    quantity = isCombo() ? 1 : 10;
+    qtyValue.textContent = String(quantity);
     if (modalEmoji) modalEmoji.textContent = data.emoji || '';
     modalTitle.textContent = data.name;
     modalPrice.textContent = data.price;
@@ -353,17 +353,20 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
   });
 
   qtyMinus.addEventListener('click', () => {
-    if (quantity > 10) {
-      quantity -= 5;
-      qtyValue.textContent = quantity;
+    const step = isCombo() ? 1 : 5;
+    const min = isCombo() ? 1 : 10;
+    if (quantity > min) {
+      quantity = Math.max(quantity - step, min);
+      qtyValue.textContent = String(quantity);
       updateSubtotal();
     }
   });
 
   qtyPlus.addEventListener('click', () => {
+    const step = isCombo() ? 1 : 5;
     if (quantity < 100) {
-      quantity += 5;
-      qtyValue.textContent = quantity;
+      quantity += step;
+      qtyValue.textContent = String(quantity);
       updateSubtotal();
     }
   });
@@ -458,32 +461,57 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     }
   });
 
-  const btnTestData = document.getElementById('btn-test-data');
-  btnTestData.addEventListener('click', () => {
-    fieldName.value = 'Leidy';
-    fieldPhone.value = '11 1234 5678';
-    fieldAddress.value = '';
-    fieldReference.value = 'Dpto 4B';
-    fieldNotes.value = 'Test de pedido';
-
+  // Disponible desde consola: fillTestData() o fillTestData({ name, phone, address, barrio, date, time })
+  type FillOverrides = { name?: string; phone?: string; address?: string; barrio?: string; date?: string; time?: string; reference?: string; notes?: string };
+  (window as Window & { fillTestData: (o?: FillOverrides) => void }).fillTestData = function(overrides: FillOverrides = {}) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const ymd = tomorrow.toISOString().slice(0, 10);
-    fieldDate.value = ymd;
+
+    fieldName.value = overrides.name ?? 'Leidy';
+    fieldPhone.value = overrides.phone ?? '11 1234 5678';
+    fieldReference.value = overrides.reference ?? 'Dpto 4B';
+    fieldNotes.value = overrides.notes ?? 'Test de pedido';
+    fieldDate.value = overrides.date ?? ymd;
     fieldDate.dispatchEvent(new Event('change', { bubbles: true }));
-
-    fieldTime.value = '14:00-16:00';
+    fieldTime.value = overrides.time ?? '14:00-16:00';
     fieldTime.dispatchEvent(new Event('change', { bubbles: true }));
-
     addressValidated = false;
     addressIsCaba = false;
     addressError.classList.add('hidden');
-    fieldAddress.value = 'Biarritz 1893, CABA';
-    if (fieldBarrio) fieldBarrio.value = 'belgrano';
+    barrioError.classList.add('hidden');
+    fieldAddress.value = overrides.address ?? 'Biarritz 1893, CABA';
+    if (fieldBarrio) fieldBarrio.value = overrides.barrio ?? 'belgrano';
     fieldAddress.dispatchEvent(new Event('input', { bubbles: true }));
-  });
+    console.log('✅ Datos de prueba cargados. Podés sobreescribir con: fillTestData({ name, phone, address, barrio, date, time })');
+  };
 
   let addressCheckTimeout;
+
+  fieldBarrio.addEventListener('change', () => {
+    clearTimeout(addressCheckTimeout);
+    addressValidated = false;
+    barrioError.classList.add('hidden');
+    const addr = fieldAddress.value.trim();
+    if (addr.length >= 5) {
+      addressCheckTimeout = setTimeout(async () => {
+        await validateAddressViaAPI(addr);
+        updateAddressUI();
+      }, 200);
+    }
+  });
+
+  function updateAddressUI() {
+    if (addressIsCaba) {
+      addressError.className = 'text-green-600 text-xs mt-1';
+      addressError.textContent = '✅ Dirección en Capital Federal';
+      addressError.classList.remove('hidden');
+    } else {
+      addressError.className = 'text-red-500 text-xs mt-1';
+      addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
+      addressError.classList.remove('hidden');
+    }
+  }
 
   fieldAddress.addEventListener('input', () => {
     clearTimeout(addressCheckTimeout);
@@ -493,17 +521,9 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
       const addr = fieldAddress.value.trim();
       if (addr.length >= 5) {
         await validateAddressViaAPI(addr);
-        if (addressIsCaba) {
-          addressError.className = 'text-green-600 text-xs mt-1';
-          addressError.textContent = '✅ Dirección en Capital Federal';
-          addressError.classList.remove('hidden');
-        } else {
-          addressError.className = 'text-red-500 text-xs mt-1';
-          addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
-          addressError.classList.remove('hidden');
-        }
+        updateAddressUI();
       }
-    }, 600);
+    }, 400);
   });
 
   async function validateForm() {
@@ -517,19 +537,20 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
     }
     phoneError.classList.add('hidden');
 
+    const barrio = fieldBarrio.value;
+    if (!barrio) {
+      barrioError.textContent = 'Seleccioná un barrio de CABA o "Otro".';
+      barrioError.classList.remove('hidden');
+      fieldBarrio.focus();
+      return false;
+    }
+    barrioError.classList.add('hidden');
+
     const address = fieldAddress.value.trim();
     if (!address) { fieldAddress.focus(); return false; }
 
-    if (!addressValidated) {
-      const ok = await validateAddressViaAPI(address);
-      if (!ok) {
-        addressError.className = 'text-red-500 text-xs mt-1';
-        addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
-        addressError.classList.remove('hidden');
-        fieldAddress.focus();
-        return false;
-      }
-    } else if (!addressIsCaba) {
+    const ok = await validateAddressViaAPI(address);
+    if (!ok) {
       addressError.className = 'text-red-500 text-xs mt-1';
       addressError.textContent = 'Solo entregamos en Capital Federal. Ingresá una dirección en CABA.';
       addressError.classList.remove('hidden');
