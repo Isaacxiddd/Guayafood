@@ -47,14 +47,6 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  if (!accessToken) {
-    return new Response(JSON.stringify({ error: 'Missing MERCADOPAGO_ACCESS_TOKEN' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   const siteUrl = process.env.PUBLIC_SITE_URL || 'https://guayafood.vercel.app';
 
   let body: {
@@ -123,6 +115,14 @@ export const POST: APIRoute = async ({ request }) => {
   if (timeError) {
     return new Response(JSON.stringify({ error: timeError }), {
       status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!accessToken) {
+    return new Response(JSON.stringify({ error: 'Missing MERCADOPAGO_ACCESS_TOKEN' }), {
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
