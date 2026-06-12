@@ -37,7 +37,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
       )}
 
       <div class="mb-5">
-        <label class="block text-sm font-semibold text-texto mb-2">Cantidad</label>
+        <p class="block text-sm font-semibold text-texto mb-2">Cantidad</p>
         <div class="flex items-center gap-3">
           <button id="qty-minus" class="w-10 h-10 rounded-full border border-crema-dark flex items-center justify-center text-lg font-bold text-texto hover:bg-crema transition-colors">−</button>
           <span id="qty-value" class="text-2xl font-bold text-texto w-14 text-center">10</span>
@@ -60,20 +60,20 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
 
       <div class="space-y-3 mb-5">
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Tu nombre</label>
+          <label for="field-name" class="block text-sm font-semibold text-texto mb-1">Tu nombre</label>
           <input id="field-name" type="text" placeholder="Ej: Leidy García" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Email <span class="text-xs text-gray-400 font-normal">(opcional, mejora la aprobación del pago)</span></label>
+          <label for="field-email" class="block text-sm font-semibold text-texto mb-1">Email <span class="text-xs text-gray-400 font-normal">(opcional, mejora la aprobación del pago)</span></label>
           <input id="field-email" type="email" placeholder="Ej: leidy@gmail.com" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Teléfono</label>
+          <label for="field-phone" class="block text-sm font-semibold text-texto mb-1">Teléfono</label>
           <input id="field-phone" type="tel" placeholder="Ej: 11 1234 5678" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
           <p id="phone-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">
+          <label for="field-address" class="block text-sm font-semibold text-texto mb-1">
             Dirección
             <span class="text-xs text-vinotinto font-normal"> (solo Capital Federal)</span>
           </label>
@@ -81,7 +81,7 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
           <p id="address-error" class="text-red-500 text-xs mt-1 hidden">Solo entregamos en Capital Federal. Ingresá una dirección en CABA.</p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Barrio <span class="text-xs text-vinotinto font-normal">(en CABA)</span></label>
+          <label for="field-barrio" class="block text-sm font-semibold text-texto mb-1">Barrio <span class="text-xs text-vinotinto font-normal">(en CABA)</span></label>
           <select id="field-barrio" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white">
             <option value="">Seleccioná tu barrio</option>
             <option value="almagro">Almagro</option>
@@ -145,12 +145,12 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
           <p id="barrio-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Fecha de entrega <span class="text-xs text-vinotinto">(pedí con anticipación)</span></label>
+          <label for="field-date" class="block text-sm font-semibold text-texto mb-1">Fecha de entrega <span class="text-xs text-vinotinto">(pedí con anticipación)</span></label>
           <input id="field-date" type="date" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
           <p id="date-error" class="text-red-500 text-xs mt-1 hidden"></p>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Horario de entrega</label>
+          <label for="field-time" class="block text-sm font-semibold text-texto mb-1">Horario de entrega</label>
           <select id="field-time" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white">
             <option value="">Seleccioná un horario</option>
             {DELIVERY.timeSlots.map((s) => (
@@ -166,11 +166,11 @@ const waUrl = WHATSAPP.message(WHATSAPP.messages.productos);
           </div>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Referencia del lugar (opcional)</label>
+          <label for="field-reference" class="block text-sm font-semibold text-texto mb-1">Referencia del lugar (opcional)</label>
           <input id="field-reference" type="text" placeholder="Ej: Dpto 3B, timbre 5, edificio blanco" class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white" />
         </div>
         <div>
-          <label class="block text-sm font-semibold text-texto mb-1">Notas (opcional)</label>
+          <label for="field-notes" class="block text-sm font-semibold text-texto mb-1">Notas (opcional)</label>
           <textarea id="field-notes" rows="2" placeholder="Ej: Preferencia horaria, timbre, etc." class="w-full px-4 py-2.5 rounded-xl border border-crema-dark focus:border-vinotinto focus:ring-1 focus:ring-vinotinto outline-none text-sm transition-colors bg-white resize-none"></textarea>
         </div>
       </div>
